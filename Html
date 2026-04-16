@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Kalkulator - Leon Aabak</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="header" onclick="showHome()">Total Kalkulator</div>
+    <div class="author-tag">Leon Aabak</div>
+
+    <div id="theme-selector">
+        <div class="theme-dot" style="background: #00d2ff" onclick="setTheme('#00d2ff', '#3a7bd5', 0)"></div>
+        <div class="theme-dot" style="background: #00ff87" onclick="setTheme('#00ff87', '#60efff', 1)"></div>
+        <div class="theme-dot" style="background: #e000ff" onclick="setTheme('#e000ff', '#7000ff', 2)"></div>
+        <div class="theme-dot" style="background: #ff8c00" onclick="setTheme('#ff8c00', '#e52d27', 3)"></div>
+        <div class="theme-dot" style="background: #ff0844" onclick="setTheme('#ff0844', '#ffb199', 4)"></div>
+    </div>
+
+    <div id="search-container">
+        <input type="text" id="search-bar" placeholder="🔍 Søk i alle 36 funksjoner...">
+    </div>
+
+    <div id="folder-view" class="grid-container"></div>
+    <div id="list-view" class="grid-container" style="display: none;"></div>
+
+    <div id="history-panel" class="glass-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="color: var(--primary);">🕒 Siste utregninger</h3>
+            <button class="clear-history" onclick="clearHistory()">🗑️ Tøm logg</button>
+        </div>
+        <div id="history-list"><i>Ingen historikk enda.</i></div>
+    </div>
+
+    <div id="calc-view" class="glass-panel">
+        <div style="display: flex;">
+            <button class="back-btn" onclick="showHome()">← Hjem</button>
+            <button class="back-btn" id="btn-back-list">← Tilbake</button>
+        </div>
+        <h2 id="calc-title" style="margin-bottom: 15px; color: var(--primary);"></h2>
+        <div id="pre-calc-formula"></div>
+        <div id="input-container"></div>
+        <button class="action-btn" onclick="executeCalc()">Regn ut (Enter)</button>
+        
+        <div id="result-container">
+            <div id="result-box"></div>
+            <div id="explanation-box"></div>
+            <div id="graph-container"><canvas id="graphCanvas"></canvas></div>
+            <button onclick="copyResult()" style="margin-top: 15px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 8px; border-radius: 5px; cursor: pointer;">Kopier svar</button>
+        </div>
+    </div>
+
+    <div id="toast">Kopiert! ✅</div>
+    <div class="footer">Total Kalk © 2026 | Leon Aabak</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
