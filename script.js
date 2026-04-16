@@ -322,4 +322,12 @@ window.onkeydown = (e) => {
     if(e.key === 'Enter' && calcView.style.display === 'block') executeCalc(); 
     if(e.key === 'Escape') showHome(); 
 };
+
+
+document.getElementById('btn-back-list').onclick = () => {
+    document.getElementById('calc-view').style.display = 'none';
+    document.getElementById('list-view').style.display = 'grid';
+    // Skjul grafen og resultatene for neste gang
+    document.getElementById('result-container').style.display = 'none';
+};
 renderFolders();
