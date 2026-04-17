@@ -25,54 +25,62 @@
     <main>
         <section id="search-container">
             <label for="search-bar" class="visually-hidden">Søk i funksjoner</label>
-            <input type="text" id="search-bar" placeholder="🔍 Søk i alle 36 funksjoner...">
+            <input type="text" id="search-bar" placeholder="🔍 Søk i alle 38 funksjoner...">
         </section>
 
-        <section id="folder-view" class="grid-container"></section>
-        <section id="list-view" class="grid-container" style="display: none;"></section>
+        <div class="hoved-layout">
+            <div class="venstre-kolonne">
+                <section id="folder-view" class="grid-container"></section>
+                <section id="list-view" class="grid-container" style="display: none;"></section>
 
-        <section id="history-panel" class="glass-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="color: var(--primary);">🕒 Siste utregninger</h3>
-                <button class="clear-history" onclick="clearHistory()">🗑️ Tøm logg</button>
-            </div>
-            <div id="history-list"><i>Ingen historikk enda.</i></div>
-        </section>
-
-        <article id="calc-view" class="glass-panel">
-            <nav style="display: flex;">
-                <button class="back-btn" onclick="showHome()">← Hjem</button>
-                <button class="back-btn" id="btn-back-list">← Tilbake</button>
-            </nav>
-            <h2 id="calc-title" style="margin-bottom: 15px; color: var(--primary);"></h2>
-            <div id="pre-calc-formula" aria-live="polite"></div>
-            
-            <div id="input-container"></div>
-            <button class="action-btn" onclick="executeCalc()">Regn ut (Enter)</button>
-            
-            <section id="result-container">
-                <div id="result-box" role="status"></div>
-                <div id="explanation-box"></div>
-                <div id="graph-container"><canvas id="graphCanvas"></canvas></div>
-                
-                <div id="enhetssirkel-container" style="display: none; margin-top: 25px; text-align: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
-                    <h3 style="color: var(--primary); margin-bottom: 15px;">Enhetssirkel</h3>
-                    <canvas id="enhetssirkel" width="300" height="300" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);"></canvas>
+                <article id="calc-view" class="glass-panel" style="display: none;">
+                    <nav style="display: flex;">
+                        <button class="back-btn" onclick="showHome()">← Hjem</button>
+                        <button class="back-btn" id="btn-back-list">← Tilbake</button>
+                    </nav>
+                    <h2 id="calc-title" style="margin-bottom: 15px; color: var(--primary);"></h2>
+                    <div id="pre-calc-formula" aria-live="polite"></div>
                     
-                    <div class="kontroller" style="margin-top: 15px;">
-                        <label for="vinkelInput" style="display: block; margin-bottom: 8px;">Vinkel i grader:</label>
-                        <input type="number" id="vinkelInput" value="45" min="-360" max="360" style="padding: 8px; width: 100px; text-align: center; border-radius: 5px; border: 1px solid var(--primary); background: transparent; color: inherit; font-size: 16px;">
-                        
-                        <div id="trig-resultater" style="margin-top: 15px; display: flex; justify-content: center; gap: 20px;">
-                            <p>Sin: <span id="sinVerdi" style="font-weight: bold; color: var(--primary);">-</span></p>
-                            <p>Cos: <span id="cosVerdi" style="font-weight: bold; color: var(--primary);">-</span></p>
-                            <p>Tan: <span id="tanVerdi" style="font-weight: bold; color: var(--primary);">-</span></p>
+                    <div id="input-container"></div>
+                    <button class="action-btn" onclick="executeCalc()">Regn ut (Enter)</button>
+                    
+                    <section id="result-container">
+                        <div id="result-box" role="status"></div>
+                        <div id="explanation-box"></div>
+                        <div id="graph-container"><canvas id="graphCanvas"></canvas></div>
+                        <button onclick="copyResult()" style="margin-top: 25px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 8px; border-radius: 5px; cursor: pointer;">Kopier svar</button>
+                    </section>
+                </article>
+            </div>
+
+            <aside class="hoyre-kolonne">
+                <div class="glass-panel verktoy-boks">
+                    <h3 style="color: var(--primary); margin-bottom: 10px;">📉 Hurtig-Graf</h3>
+                    <input type="text" id="hurtigGrafInput" placeholder="f.eks. x^2 - 4" style="margin-bottom: 10px; padding: 8px;">
+                    <canvas id="hurtigCanvas" width="250" height="150" style="background: #000; border-radius: 5px; width: 100%;"></canvas>
+                </div>
+
+                <div class="glass-panel verktoy-boks">
+                    <h3 style="color: var(--primary); margin-bottom: 10px;">⭕ Enhetssirkel</h3>
+                    <canvas id="enhetssirkel" width="250" height="250" style="background: rgba(255,255,255,0.05); border-radius: 5px; width: 100%; max-width: 250px; display: block; margin: 0 auto;"></canvas>
+                    <div class="kontroller" style="margin-top: 10px;">
+                        <input type="number" id="vinkelInput" value="45" style="width: 80px; text-align: center; margin: 0 auto 10px auto; display: block;">
+                        <div id="trig-resultater" style="display: flex; justify-content: space-around; font-size: 0.85rem;">
+                            <p>Sin: <span id="sinVerdi" style="color: var(--primary); font-weight: bold;">-</span></p>
+                            <p>Cos: <span id="cosVerdi" style="color: var(--primary); font-weight: bold;">-</span></p>
                         </div>
                     </div>
                 </div>
-                <button onclick="copyResult()" style="margin-top: 25px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 8px; border-radius: 5px; cursor: pointer;">Kopier svar</button>
-            </section>
-        </article>
+
+                <section id="history-panel" class="glass-panel verktoy-boks">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="color: var(--primary); font-size: 1rem;">🕒 Historikk</h3>
+                        <button class="clear-history" onclick="clearHistory()">Tøm</button>
+                    </div>
+                    <div id="history-list"><i>Ingen historikk enda.</i></div>
+                </section>
+            </aside>
+        </div>
     </main>
 
     <div id="toast" role="alert">Kopiert! ✅</div>
