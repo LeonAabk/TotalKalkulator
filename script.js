@@ -25,7 +25,7 @@ let currentCalc = null;
 
 // --- GRAF-VARIABLER (For zoom og panorering) ---
 let currentGraphFunc = null;
-let graphScale = 30; // Hvor mange piksler er 1 enhet
+let graphScale = 30; 
 let graphOffsetX = 0;
 let graphOffsetY = 0;
 let isDraggingGraph = false;
@@ -182,6 +182,25 @@ const calculators = [
         let res = p / (1 - r/100);
         return { res: res.toFixed(2) + " kr", exp: `${p} / (1 - ${r}/100) = ${res.toFixed(2)}` };
     }},
+    { id: 37, folder: "Økonomi", name: "Valuta (Sanntid)", formula: "Henter live kurser...", html: '<input type="number" id="i1" placeholder="Beløp" value="100"><select id="i2"><option value="NOK">Fra: Norske Kroner (NOK)</option><option value="USD">Fra: Amerikanske Dollar (USD)</option><option value="EUR">Fra: Euro (EUR)</option><option value="GBP">Fra: Britiske Pund (GBP)</option><option value="SEK">Fra: Svenske Kroner (SEK)</option><option value="DKK">Fra: Danske Kroner (DKK)</option></select><select id="i3"><option value="USD">Til: Amerikanske Dollar (USD)</option><option value="NOK">Til: Norske Kroner (NOK)</option><option value="EUR">Til: Euro (EUR)</option><option value="GBP">Til: Britiske Pund (GBP)</option><option value="SEK">Til: Svenske Kroner (SEK)</option><option value="DKK">Til: Danske Kroner (DKK)</option></select>', calc: async () => {
+        let amount = parseFloat(document.getElementById('i1').value);
+        let from = document.getElementById('i2').value;
+        let to = document.getElementById('i3').value;
+        if (isNaN(amount)) return {res: "Feil: Skriv inn et gyldig beløp"};
+        
+        document.getElementById('result-box').innerText = "Henter kurser...";
+        try {
+            let response = await fetch(`https://open.er-api.com/v6/latest/${from}`);
+            let data = await response.json();
+            let rate = data.rates[to];
+            let converted = amount * rate;
+            // Viser dato for når kursen sist ble oppdatert av bankene
+            let date = new Date(data.time_last_update_utc).toLocaleDateString('no-NO');
+            return { res: `${converted.toFixed(2)} ${to}`, exp: `1 ${from} = ${rate.toFixed(4)} ${to}\nKurser sist oppdatert: ${date}` };
+        } catch (e) {
+            return { res: "Feil ved henting", exp: "Sjekk internettforbindelsen din, eller prøv igjen senere." };
+        }
+    }},
 
     // KONVERTERING
     { id: 31, folder: "Konvertering", name: "CM til Feet", formula: "cm / 30.48", html: '<input type="number" id="i1" placeholder="Centimeter">', calc: () => {
@@ -202,7 +221,7 @@ const calculators = [
         let w=parseFloat(document.getElementById('i1').value), h=parseFloat(document.getElementById('i2').value);
         let bmi = w/(h*h); return { res: bmi.toFixed(1), exp: bmi < 18.5 ? "Undervekt" : bmi < 25 ? "Normal" : "Overvekt" };
     }},
-    { id: 20, folder: "Diverse", name: "Om appen", formula: "Info", html: '<p>Utviklet av Leon Aabak. V10 Pro.</p>', calc: () => ({res:"Leon Aabak V10 Pro", exp: "Fullstendig bibliotek med 36 funksjoner."}) }
+    { id: 20, folder: "Diverse", name: "Om appen", formula: "Info", html: '<p>Utviklet av Leon Aabak. V10 Pro.</p>', calc: () => ({res:"Leon Aabak V10 Pro", exp: "Fullstendig bibliotek med 37 funksjoner."}) }
 ];
 
 function clearHistory() {
@@ -293,12 +312,18 @@ function showHome() {
     toggleEnhetssirkel(false); 
 }
 
-function executeCalc() {
+// Liten oppdatering her: function er nå "async" slik at vi kan bruke "await" til å hente valuta
+async function executeCalc() {
     if(!currentCalc) return;
-    const res = currentCalc.calc();
+    
+    // Viser resultat-boksen umiddelbart i tilfelle vi må vente på API-et
+    document.getElementById('result-container').style.display = 'block';
+    
+    // Vent på at kalkulatoren (f.eks valuta) gjør seg ferdig
+    const res = await currentCalc.calc();
+    
     document.getElementById('result-box').innerText = "Svar: " + res.res;
     document.getElementById('explanation-box').innerText = res.exp || "";
-    document.getElementById('result-container').style.display = 'block';
     
     if(res.graph) { 
         document.getElementById('graph-container').style.display = 'block'; 
@@ -338,28 +363,22 @@ function renderHistory() {
 function drawGraph() {
     if (!currentGraphFunc) return;
     
-    // Sett bredde og høyde dynamisk
     const w = canvas.width = canvas.parentElement.clientWidth; 
     const h = canvas.height = 350;
     
     ctx.clearRect(0, 0, w, h); 
     
-    // Regn ut hvor origo (0,0) er, basert på panorering (offset)
     const ox = w / 2 + graphOffsetX; 
     const oy = h / 2 + graphOffsetY; 
     
-    // Bestem hvor ofte vi skal tegne linjer/tall basert på zoom
     let step = 1;
     if (graphScale < 15) step = 5;
     if (graphScale < 5) step = 10;
     if (graphScale > 60) step = 0.5;
     if (graphScale > 150) step = 0.1;
 
-    // Font-innstillinger for tallene
     ctx.font = '11px sans-serif';
     ctx.fillStyle = '#888';
-
-    // Tegn rutenett og tall
     ctx.strokeStyle = '#222'; 
     ctx.lineWidth = 1; 
 
@@ -367,13 +386,11 @@ function drawGraph() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let i = 0; ox + i * graphScale < w || ox - i * graphScale > 0; i += step) {
-        // Positiv X (Høyre)
         let px = ox + i * graphScale;
         if (px <= w && px >= 0) {
             ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke();
             if (i !== 0) ctx.fillText(i, px, oy + 5);
         }
-        // Negativ X (Venstre)
         let nx = ox - i * graphScale;
         if (i !== 0 && nx >= 0 && nx <= w) {
             ctx.beginPath(); ctx.moveTo(nx, 0); ctx.lineTo(nx, h); ctx.stroke();
@@ -385,13 +402,11 @@ function drawGraph() {
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let i = 0; oy + i * graphScale < h || oy - i * graphScale > 0; i += step) {
-        // Negativ Y (Går nedover på skjermen)
         let py = oy + i * graphScale;
         if (py <= h && py >= 0) {
             ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
             if (i !== 0) ctx.fillText(-i, ox - 5, py);
         }
-        // Positiv Y (Går oppover på skjermen)
         let ny = oy - i * graphScale;
         if (i !== 0 && ny >= 0 && ny <= h) {
             ctx.beginPath(); ctx.moveTo(0, ny); ctx.lineTo(w, ny); ctx.stroke();
@@ -399,33 +414,28 @@ function drawGraph() {
         }
     }
     
-    // Tegn selve aksene (Tykke linjer)
     ctx.strokeStyle = '#555'; 
     ctx.lineWidth = 2; 
     ctx.beginPath(); 
-    ctx.moveTo(0, oy); ctx.lineTo(w, oy); // X-akse
-    ctx.moveTo(ox, 0); ctx.lineTo(ox, h); // Y-akse
+    ctx.moveTo(0, oy); ctx.lineTo(w, oy); 
+    ctx.moveTo(ox, 0); ctx.lineTo(ox, h); 
     ctx.stroke();
 
-    // Tegn tallet 0 i origo
     ctx.fillText("0", ox - 5, oy + 12);
     
-    // Tegn Funksjonen (Den faktiske grafen)
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#00d2ff'; 
     ctx.lineWidth = 2; 
     ctx.beginPath();
     
     let lastY = null;
-    // Går gjennom hver piksel i bredden for å tegne en jevn strek
     for(let px = 0; px <= w; px += 1) { 
-        let mx = (px - ox) / graphScale; // Gjør om piksler til matte-X
-        let my = currentGraphFunc(mx);   // Spør funksjonen din om matte-Y
-        let py = oy - (my * graphScale); // Gjør om matte-Y tilbake til piksler
+        let mx = (px - ox) / graphScale; 
+        let my = currentGraphFunc(mx);   
+        let py = oy - (my * graphScale); 
         
-        // Unngå stygge vertikale streker ved asymptoter (f.eks rasjonelle funksjoner)
         if (lastY !== null && Math.abs(py - lastY) > h/2) {
-            ctx.stroke(); // Avslutter linjen
-            ctx.beginPath(); // Starter ny etter hoppet
+            ctx.stroke(); 
+            ctx.beginPath(); 
             ctx.moveTo(px, py);
         } else if (!isNaN(py) && isFinite(py)) {
             if (lastY === null) ctx.moveTo(px, py);
@@ -436,7 +446,6 @@ function drawGraph() {
     ctx.stroke();
 }
 
-// Mus og Touch hendelser for grafen (Zoom og Drag)
 canvas.addEventListener('mousedown', (e) => {
     isDraggingGraph = true;
     dragStartX = e.clientX - graphOffsetX;
@@ -455,14 +464,13 @@ window.addEventListener('mouseup', () => {
 });
 
 canvas.addEventListener('wheel', (e) => {
-    e.preventDefault(); // Hindrer siden i å scrolle
+    e.preventDefault(); 
     const zoomIntensity = 0.1;
     const wheel = e.deltaY < 0 ? 1 : -1;
     let zoom = Math.exp(wheel * zoomIntensity);
     
     graphScale *= zoom;
     
-    // Sett grenser for hvor mye man kan zoome
     if (graphScale < 2) graphScale = 2;
     if (graphScale > 500) graphScale = 500;
     
@@ -585,4 +593,3 @@ function toggleEnhetssirkel(skalVises) {
         container.style.display = 'none';
     }
 }
- 
