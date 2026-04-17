@@ -344,7 +344,6 @@ button:focus-visible {
     outline-offset: 3px;
 }
 
-
 /* =========================================
    ENHETSSIRKEL STYLING 
    ========================================= */
@@ -372,5 +371,6 @@ button:focus-visible {
     margin: 0;
 }
 #vinkelInput[type=number] {
+    -moz-appearance: textfield; /* Sørger for at det også fungerer i Firefox */
     appearance: textfield;
 }
