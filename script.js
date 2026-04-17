@@ -585,3 +585,4 @@ function toggleEnhetssirkel(skalVises) {
         container.style.display = 'none';
     }
 }
+ 
