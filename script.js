@@ -331,3 +331,97 @@ document.getElementById('btn-back-list').onclick = () => {
     document.getElementById('result-container').style.display = 'none';
 };
 renderFolders();
+
+
+// =========================================
+// ENHETSSIRKEL LOGIKK
+// =========================================
+
+const canvasSirkel = document.getElementById('enhetssirkel');
+const ctxSirkel = canvasSirkel ? canvasSirkel.getContext('2d') : null;
+const vinkelInput = document.getElementById('vinkelInput');
+
+function oppdaterSirkel() {
+    if (!ctxSirkel) return;
+    
+    // Canvas er 300x300, så senteret er på 150,150
+    const senterX = canvasSirkel.width / 2;
+    const senterY = canvasSirkel.height / 2;
+    const radius = 100; 
+
+    // Hent vinkel fra input (standard 0 hvis tom)
+    let grader = parseFloat(vinkelInput.value) || 0;
+    let radianer = grader * (Math.PI / 180);
+
+    let sinVerdi = Math.sin(radianer);
+    let cosVerdi = Math.cos(radianer);
+    let tanVerdi = Math.tan(radianer);
+
+    // Oppdater tallene i HTML
+    document.getElementById('sinVerdi').innerText = sinVerdi.toFixed(4);
+    document.getElementById('cosVerdi').innerText = cosVerdi.toFixed(4);
+    
+    // Håndter uendelig tangens (90 og 270 grader)
+    if (grader % 180 === 90 || grader % 180 === -90) {
+        document.getElementById('tanVerdi').innerText = "Udefinert";
+    } else {
+        document.getElementById('tanVerdi').innerText = tanVerdi.toFixed(4);
+    }
+
+    // Finn koordinater på sirkelen
+    let punktX = senterX + (cosVerdi * radius);
+    let punktY = senterY - (sinVerdi * radius);
+
+    // 1. Tøm lerretet for forrige tegning
+    ctxSirkel.clearRect(0, 0, canvasSirkel.width, canvasSirkel.height);
+    
+    // 2. Tegn x- og y-akser (Svake, hvite linjer)
+    ctxSirkel.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctxSirkel.lineWidth = 1;
+    ctxSirkel.beginPath();
+    ctxSirkel.moveTo(0, senterY);
+    ctxSirkel.lineTo(canvasSirkel.width, senterY);
+    ctxSirkel.moveTo(senterX, 0);
+    ctxSirkel.lineTo(senterX, canvasSirkel.height);
+    ctxSirkel.stroke();
+
+    // 3. Tegn selve enhetssirkelen
+    // Prøver å hente CSS-variabelen for primary-fargen, faller tilbake på hvit
+    const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#ffffff';
+    ctxSirkel.strokeStyle = primaryColor;
+    ctxSirkel.lineWidth = 2;
+    ctxSirkel.beginPath();
+    ctxSirkel.arc(senterX, senterY, radius, 0, 2 * Math.PI);
+    ctxSirkel.stroke();
+
+    // 4. Tegn hypotenusen (linjen fra senter til punktet)
+    ctxSirkel.strokeStyle = '#ffffff';
+    ctxSirkel.beginPath();
+    ctxSirkel.moveTo(senterX, senterY);
+    ctxSirkel.lineTo(punktX, punktY);
+    ctxSirkel.stroke();
+    
+    // 5. Tegn punktet på sirkelbuen
+    ctxSirkel.fillStyle = primaryColor;
+    ctxSirkel.beginPath();
+    ctxSirkel.arc(punktX, punktY, 5, 0, 2 * Math.PI);
+    ctxSirkel.fill();
+}
+
+// Lytt etter endringer hver gang brukeren skriver et tall
+if (vinkelInput) {
+    vinkelInput.addEventListener('input', oppdaterSirkel);
+}
+
+// Hjelpefunksjon for å vise eller skjule sirkelen
+function toggleEnhetssirkel(skalVises) {
+    const container = document.getElementById('enhetssirkel-container');
+    if (!container) return;
+    
+    if (skalVises) {
+        container.style.display = 'block';
+        oppdaterSirkel(); // Tegner sirkelen så snart den blir synlig
+    } else {
+        container.style.display = 'none';
+    }
+}
