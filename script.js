@@ -33,7 +33,7 @@ let dragStartX = 0;
 let dragStartY = 0;
 
 const calculators = [
-    // GRUNNLEGGENDE
+    // GRUNNLEGGENDE (5)
     { id: 1, folder: "Grunnleggende", name: "Prosent", formula: "(p / 100) * tall", html: '<input type="number" id="i1" placeholder="Prosent (%)"><input type="number" id="i2" placeholder="Av tall">', calc: () => {
         let p = parseFloat(document.getElementById('i1').value), t = parseFloat(document.getElementById('i2').value);
         return { res: (p/100)*t, exp: `(${p}/100) * ${t} = ${(p/100)*t}` };
@@ -55,7 +55,7 @@ const calculators = [
         return x < 0 ? {res: "Feil: Negativ rot"} : { res: Math.sqrt(x).toFixed(4), exp: `√${x} = ${Math.sqrt(x).toFixed(4)}` };
     }},
 
-    // ALGEBRA
+    // ALGEBRA (10)
     { id: 23, folder: "Algebra", name: "Lineær funksjon", formula: "y = ax + b", html: '<input type="number" id="i1" placeholder="x1"><input type="number" id="i2" placeholder="y1"><input type="number" id="i3" placeholder="x2"><input type="number" id="i4" placeholder="y2">', calc: () => {
         let x1=parseFloat(document.getElementById('i1').value), y1=parseFloat(document.getElementById('i2').value), x2=parseFloat(document.getElementById('i3').value), y2=parseFloat(document.getElementById('i4').value);
         let a = (y2-y1)/(x2-x1), b = y1-(a*x1);
@@ -105,7 +105,7 @@ const calculators = [
         return { res: `x = ${x.toFixed(2)}`, exp: `Symmetrilinje (der f'(x)=0):\nx = -b / 2a = -${b} / (2*${a})` };
     }},
 
-    // GEOMETRI
+    // GEOMETRI (8)
     { id: 5, folder: "Geometri", name: "Pytagoras", formula: "a² + b² = c²", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b">', calc: () => {
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value);
         let c = Math.sqrt(a*a+b*b);
@@ -219,7 +219,7 @@ const calculators = [
         }
     },
 
-    // MATTE
+    // MATTE (2)
     { id: 3, folder: "Matte", name: "Brøk (Forenkle)", formula: "a/b -> c/d", html: '<input type="number" id="i1" placeholder="Teller"><input type="number" id="i2" placeholder="Nevner">', calc: () => {
         let a=parseInt(document.getElementById('i1').value), b=parseInt(document.getElementById('i2').value);
         let d = gcd(a,b); return { res: `${a/d} / ${b/d}`, exp: `Deler på største felles divisor: ${d}` };
@@ -229,7 +229,7 @@ const calculators = [
         return { res: a/b, exp: `${a} / ${b} = ${a/b}` };
     }},
 
-    // STATISTIKK
+    // STATISTIKK (2)
     { id: 6, folder: "Statistikk", name: "Sannsynlighet", formula: "g / m", html: '<input type="number" id="i1" placeholder="Gunstige"><input type="number" id="i2" placeholder="Mulige">', calc: () => {
         let g=parseFloat(document.getElementById('i1').value), m=parseFloat(document.getElementById('i2').value);
         return { res: `${((g/m)*100).toFixed(2)}%`, exp: `${g} / ${m} = ${(g/m).toFixed(4)}` };
@@ -239,7 +239,7 @@ const calculators = [
         let sum = arr.reduce((a,b)=>a+b,0); return { res: sum/arr.length, exp: `Sum: ${sum}, Antall: ${arr.length}` };
     }},
 
-    // FYSIKK
+    // FYSIKK (3)
     { id: 18, folder: "Fysikk", name: "Bølge", formula: "v = f * λ", html: '<input type="number" id="i1" placeholder="f (Hz)"><input type="number" id="i2" placeholder="λ (m)">', calc: () => {
         let f=parseFloat(document.getElementById('i1').value), l=parseFloat(document.getElementById('i2').value);
         return { res: `${f*l} m/s`, graph: (x) => Math.sin(x) };
@@ -253,7 +253,7 @@ const calculators = [
         if(!v) return {res: `v = ${s/t}`}; if(!s) return {res: `s = ${v*t}`}; return {res: `t = ${s/v}`};
     }},
 
-    // ØKONOMI
+    // ØKONOMI (3)
     { id: 26, folder: "Økonomi", name: "Rentes rente", formula: "K * v^t", html: '<input type="number" id="i1" placeholder="Kapital"><input type="number" id="i2" placeholder="Vekstf. (f.eks 1.05)"><input type="number" id="i3" placeholder="År">', calc: () => {
         let k=parseFloat(document.getElementById('i1').value), v=parseFloat(document.getElementById('i2').value), t=parseFloat(document.getElementById('i3').value);
         return { res: (k*Math.pow(v,t)).toFixed(2), graph: (x) => k*Math.pow(v,x) };
@@ -282,7 +282,7 @@ const calculators = [
         }
     }},
 
-    // KONVERTERING
+    // KONVERTERING (3)
     { id: 31, folder: "Konvertering", name: "CM til Feet", formula: "cm / 30.48", html: '<input type="number" id="i1" placeholder="Centimeter">', calc: () => {
         let cm=parseFloat(document.getElementById('i1').value);
         return { res: (cm / 30.48).toFixed(4) + " ft", exp: `${cm} / 30.48` };
@@ -296,7 +296,7 @@ const calculators = [
         return { res: `${l*10} dl / ${l*1000} ml` };
     }},
 
-    // DIVERSE
+    // DIVERSE (2)
     { id: 29, folder: "Diverse", name: "BMI", formula: "kg / m²", html: '<input type="number" id="i1" placeholder="kg"><input type="number" id="i2" placeholder="meter">', calc: () => {
         let w=parseFloat(document.getElementById('i1').value), h=parseFloat(document.getElementById('i2').value);
         let bmi = w/(h*h); return { res: bmi.toFixed(1), exp: bmi < 18.5 ? "Undervekt" : bmi < 25 ? "Normal" : "Overvekt" };
@@ -390,7 +390,6 @@ function openCalc(c) {
     listView.style.display = 'none'; 
     calcView.style.display = 'block';
     
-    // Skjuler verktøyene på små skjermer når en kalkulator er åpen for å spare plass
     if (window.innerWidth <= 800) {
         document.getElementById('hurtig-graf-panel').style.display = 'none';
         document.getElementById('enhetssirkel-panel').style.display = 'none';
@@ -584,7 +583,6 @@ function tegnHurtigGraf() {
     let expr = hurtigInput.value.trim();
     if (!expr) return;
     
-    // Gjør om vanlige mattetegn til JavaScript math
     expr = expr.replace(/x/g, '(x)')
                .replace(/\^/g, '**')
                .replace(/sin/g, 'Math.sin')
@@ -610,7 +608,6 @@ function tegnHurtigGraf() {
                 else { hurtigCtx.lineTo(px, py); }
             }
         } catch(e) {
-            // Ignorer ufullstendige formler mens brukeren skriver
             break;
         }
     }
@@ -712,7 +709,6 @@ document.getElementById('btn-back-list').onclick = () => {
     document.getElementById('list-view').style.display = 'grid';
     document.getElementById('result-container').style.display = 'none';
     
-    // Viser verktøyene igjen når man går tilbake (for mobil-brukere)
     document.getElementById('hurtig-graf-panel').style.display = 'block';
     document.getElementById('enhetssirkel-panel').style.display = 'block';
     historyPanel.style.display = 'block';
