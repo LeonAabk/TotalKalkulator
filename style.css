@@ -343,3 +343,34 @@ button:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 3px;
 }
+
+
+/* =========================================
+   ENHETSSIRKEL STYLING 
+   ========================================= */
+
+#enhetssirkel-container {
+    transition: all 0.3s ease-in-out;
+}
+
+#enhetssirkel {
+    /* Gir sirkelen en subtil glød som matcher primary-fargen din */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: block;
+    margin: 0 auto;
+}
+
+#vinkelInput:focus {
+    outline: none;
+    box-shadow: 0 0 8px var(--primary);
+}
+
+/* Skjuler opp/ned pilene på input-feltet i noen nettlesere for et renere utseende */
+#vinkelInput::-webkit-outer-spin-button,
+#vinkelInput::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+#vinkelInput[type=number] {
+    appearance: textfield;
+}
