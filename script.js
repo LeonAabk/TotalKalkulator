@@ -194,7 +194,6 @@ const calculators = [
             let data = await response.json();
             let rate = data.rates[to];
             let converted = amount * rate;
-            // Viser dato for når kursen sist ble oppdatert av bankene
             let date = new Date(data.time_last_update_utc).toLocaleDateString('no-NO');
             return { res: `${converted.toFixed(2)} ${to}`, exp: `1 ${from} = ${rate.toFixed(4)} ${to}\nKurser sist oppdatert: ${date}` };
         } catch (e) {
@@ -221,7 +220,24 @@ const calculators = [
         let w=parseFloat(document.getElementById('i1').value), h=parseFloat(document.getElementById('i2').value);
         let bmi = w/(h*h); return { res: bmi.toFixed(1), exp: bmi < 18.5 ? "Undervekt" : bmi < 25 ? "Normal" : "Overvekt" };
     }},
-    { id: 20, folder: "Diverse", name: "Om appen", formula: "Info", html: '<p>Utviklet av Leon Aabak. V10 Pro.</p>', calc: () => ({res:"Leon Aabak V10 Pro", exp: "Fullstendig bibliotek med 37 funksjoner."}) }
+    { id: 20, folder: "Diverse", name: "Om appen", formula: "Versjon 10 Pro", html: `
+        <div style="text-align: left; padding: 10px; color: #ccc; line-height: 1.6;">
+            <p style="margin-bottom: 15px;">Dette er et komplett, web-basert matematikkverktøy utviklet av <b style="color: var(--primary);">Leon Aabak</b>.</p>
+            <ul style="margin-bottom: 15px; padding-left: 20px;">
+                <li style="margin-bottom: 8px;"><b>37 Funksjoner:</b> Alt fra grunnleggende prosent til asymptoter og BMI.</li>
+                <li style="margin-bottom: 8px;"><b>Valuta i sanntid:</b> Hent oppdaterte kurser direkte fra nettet.</li>
+                <li style="margin-bottom: 8px;"><b>Avansert Grafmotor:</b> Tegn grafer med interaktiv zoom og panorering.</li>
+                <li><b>Enhetssirkel:</b> Visuell og dynamisk forståelse av trigonometri.</li>
+            </ul>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">
+                <i>Tips: Bruk søkefeltet for å raskt finne funksjonen du trenger, og stjernemerk favorittene dine for kjapp tilgang.</i>
+            </p>
+        </div>`, 
+        calc: () => ({
+            res: "Leon Aabak V10 Pro", 
+            exp: "Håper du får god bruk for Total Kalkulator!"
+        }) 
+    }
 ];
 
 function clearHistory() {
@@ -312,14 +328,11 @@ function showHome() {
     toggleEnhetssirkel(false); 
 }
 
-// Liten oppdatering her: function er nå "async" slik at vi kan bruke "await" til å hente valuta
 async function executeCalc() {
     if(!currentCalc) return;
     
-    // Viser resultat-boksen umiddelbart i tilfelle vi må vente på API-et
     document.getElementById('result-container').style.display = 'block';
     
-    // Vent på at kalkulatoren (f.eks valuta) gjør seg ferdig
     const res = await currentCalc.calc();
     
     document.getElementById('result-box').innerText = "Svar: " + res.res;
@@ -328,11 +341,10 @@ async function executeCalc() {
     if(res.graph) { 
         document.getElementById('graph-container').style.display = 'block'; 
         
-        // Nullstill graf-variabler for et nytt regnestykke
         currentGraphFunc = res.graph;
         graphOffsetX = 0; 
         graphOffsetY = 0; 
-        graphScale = 30; // Standard piksler pr tall
+        graphScale = 30; 
         drawGraph(); 
     } else { 
         document.getElementById('graph-container').style.display = 'none'; 
