@@ -20,13 +20,24 @@
 
 body {
     background-color: var(--bg-color);
-    background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+    background-image: 
+        radial-gradient(circle at 15% 50%, color-mix(in srgb, var(--primary) 15%, transparent), transparent 40%),
+        radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--secondary) 15%, transparent), transparent 40%);
+    background-size: 150% 150%;
+    animation: pustendeBakgrunn 15s ease-in-out infinite alternate;
+    background-attachment: fixed;
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding-bottom: 50px;
+}
+
+@keyframes pustendeBakgrunn {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 /* --- Header & Logo --- */
@@ -83,7 +94,8 @@ body {
 
 .theme-dot.active { 
     border-color: white; 
-    transform: scale(1.2); 
+    transform: scale(1.3); 
+    box-shadow: 0 0 10px var(--primary);
 }
 
 /* --- Layout & Paneler --- */
@@ -145,9 +157,10 @@ main {
 }
 
 .card:hover { 
-    transform: translateY(-5px); 
-    background-color: rgba(255, 255, 255, 0.08); 
+    transform: translateY(-8px) scale(1.02); 
+    background-color: rgba(255, 255, 255, 0.1); 
     border-color: var(--primary); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 15px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 .star-btn { 
@@ -271,7 +284,6 @@ canvas {
 
 #graphCanvas {
     cursor: grab;
-    /* Hindrer mobiler i å scrolle nettsiden mens man panorerer i grafen */
     touch-action: none; 
 }
 
@@ -381,4 +393,23 @@ button:focus-visible {
 #vinkelInput[type=number] {
     -moz-appearance: textfield;
     appearance: textfield;
+}
+
+/* =========================================
+   ANIMASJONER OG OVERGANGER
+   ========================================= */
+
+#folder-view, #list-view, #calc-view {
+    animation: fadeIn 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(15px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
