@@ -205,48 +205,84 @@ function clearHistory() {
 }
 
 function renderFolders() {
-    folderView.innerHTML = ''; folderView.style.display = 'grid'; listView.style.display = 'none'; calcView.style.display = 'none'; historyPanel.style.display = 'block';
+    folderView.innerHTML = ''; 
+    folderView.style.display = 'grid'; 
+    listView.style.display = 'none'; 
+    calcView.style.display = 'none'; 
+    historyPanel.style.display = 'block';
+    
     const folderIcons = { "Favoritter": "⭐", "Grunnleggende": "🧮", "Algebra": "📉", "Geometri": "📐", "Matte": "➕", "Statistikk": "📊", "Fysikk": "🧪", "Økonomi": "💰", "Konvertering": "🔄", "Diverse": "✨" };
+    
     if(favorites.length > 0) {
-        const favCard = document.createElement('div'); favCard.className = 'card glass-panel';
+        const favCard = document.createElement('div'); 
+        favCard.className = 'card glass-panel';
         favCard.innerHTML = `<span style="font-size: 2rem">${folderIcons["Favoritter"]}</span><br>Favoritter`;
-        favCard.onclick = () => openFolder("Favoritter"); folderView.appendChild(favCard);
+        favCard.onclick = () => openFolder("Favoritter"); 
+        folderView.appendChild(favCard);
     }
+    
     const folderNames = [...new Set(calculators.map(c => c.folder))];
     folderNames.forEach(name => {
-        const card = document.createElement('div'); card.className = 'card glass-panel';
+        const card = document.createElement('div'); 
+        card.className = 'card glass-panel';
         const icon = folderIcons[name] || "📁";
         card.innerHTML = `<span style="font-size: 2rem">${icon}</span><br>${name}`;
-        card.onclick = () => openFolder(name); folderView.appendChild(card);
+        card.onclick = () => openFolder(name); 
+        folderView.appendChild(card);
     });
     renderHistory();
 }
 
 function openFolder(name) {
-    currentFolder = name; folderView.style.display = 'none'; historyPanel.style.display = 'none'; listView.style.display = 'grid'; listView.innerHTML = '';
+    currentFolder = name; 
+    folderView.style.display = 'none'; 
+    historyPanel.style.display = 'none'; 
+    listView.style.display = 'grid'; 
+    listView.innerHTML = '';
+    
     let list = name === "Favoritter" ? calculators.filter(c => favorites.includes(c.id)) : calculators.filter(c => c.folder === name);
     list.forEach(c => {
-        const el = document.createElement('div'); el.className = 'card glass-panel';
+        const el = document.createElement('div'); 
+        el.className = 'card glass-panel';
         const isFav = favorites.includes(c.id);
         el.innerHTML = `<button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${c.id}, event)">★</button> ${c.name}`;
-        el.onclick = () => openCalc(c); listView.appendChild(el);
+        el.onclick = () => openCalc(c); 
+        listView.appendChild(el);
     });
 }
 
 function toggleFav(id, e) {
     e.stopPropagation();
-    if(favorites.includes(id)) favorites = favorites.filter(x => x !== id); else favorites.push(id);
-    localStorage.setItem('calcFavorites', JSON.stringify(favorites)); openFolder(currentFolder);
+    if(favorites.includes(id)) favorites = favorites.filter(x => x !== id); 
+    else favorites.push(id);
+    localStorage.setItem('calcFavorites', JSON.stringify(favorites)); 
+    openFolder(currentFolder);
 }
 
 function openCalc(c) {
-    currentCalc = c; listView.style.display = 'none'; calcView.style.display = 'block';
+    currentCalc = c; 
+    listView.style.display = 'none'; 
+    calcView.style.display = 'block';
     document.getElementById('btn-back-list').style.display = searchBar.value ? 'none' : 'block';
-    document.getElementById('calc-title').innerText = c.name; document.getElementById('pre-calc-formula').innerText = c.formula;
-    document.getElementById('input-container').innerHTML = c.html; document.getElementById('result-container').style.display = 'none';
+    document.getElementById('calc-title').innerText = c.name; 
+    document.getElementById('pre-calc-formula').innerText = c.formula;
+    document.getElementById('input-container').innerHTML = c.html; 
+    
+    // --- KOBLE PÅ ENHETSSIRKEL FOR TRIGONOMETRI ---
+    if (c.id === 15 || c.id === 16 || c.id === 17) {
+        document.getElementById('result-container').style.display = 'block';
+        toggleEnhetssirkel(true);
+    } else {
+        document.getElementById('result-container').style.display = 'none';
+        toggleEnhetssirkel(false);
+    }
 }
 
-function showHome() { searchBar.value = ''; renderFolders(); }
+function showHome() { 
+    searchBar.value = ''; 
+    renderFolders(); 
+    toggleEnhetssirkel(false); // Skjuler sirkelen
+}
 
 function executeCalc() {
     if(!currentCalc) return;
@@ -254,15 +290,23 @@ function executeCalc() {
     document.getElementById('result-box').innerText = "Svar: " + res.res;
     document.getElementById('explanation-box').innerText = res.exp || "";
     document.getElementById('result-container').style.display = 'block';
-    if(res.graph) { document.getElementById('graph-container').style.display = 'block'; drawGraph(res.graph); } 
-    else { document.getElementById('graph-container').style.display = 'none'; }
+    
+    if(res.graph) { 
+        document.getElementById('graph-container').style.display = 'block'; 
+        drawGraph(res.graph); 
+    } else { 
+        document.getElementById('graph-container').style.display = 'none'; 
+    }
+    
     historyData = [{name: currentCalc.name, res: res.res}, ...historyData].slice(0, 10);
-    localStorage.setItem('calcHistory', JSON.stringify(historyData)); renderHistory();
+    localStorage.setItem('calcHistory', JSON.stringify(historyData)); 
+    renderHistory();
 }
 
 function copyResult() {
     navigator.clipboard.writeText(document.getElementById('result-box').innerText);
-    const t = document.getElementById('toast'); t.classList.add('show');
+    const t = document.getElementById('toast'); 
+    t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
 }
 
@@ -272,22 +316,31 @@ function renderHistory() {
 }
 
 function drawGraph(f) {
-    canvas.width = canvas.parentElement.clientWidth; canvas.height = 350;
+    canvas.width = canvas.parentElement.clientWidth; 
+    canvas.height = 350;
     const w=canvas.width, h=canvas.height, ox=w/2, oy=h/2, s=25;
     ctx.clearRect(0,0,w,h); 
     
     // Grid
-    ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.beginPath();
+    ctx.strokeStyle = '#222'; 
+    ctx.lineWidth = 1; 
+    ctx.beginPath();
     for(let i=ox%s;i<w;i+=s){ctx.moveTo(i,0);ctx.lineTo(i,h);} 
-    for(let i=oy%s;i<h;i+=s){ctx.moveTo(0,i);ctx.lineTo(w,i);} ctx.stroke();
+    for(let i=oy%s;i<h;i+=s){ctx.moveTo(0,i);ctx.lineTo(w,i);} 
+    ctx.stroke();
     
     // Akser
-    ctx.strokeStyle = '#555'; ctx.lineWidth = 2; ctx.beginPath(); 
-    ctx.moveTo(0,oy); ctx.lineTo(w,oy); ctx.moveTo(ox,0); ctx.lineTo(ox,h); ctx.stroke();
+    ctx.strokeStyle = '#555'; 
+    ctx.lineWidth = 2; 
+    ctx.beginPath(); 
+    ctx.moveTo(0,oy); ctx.lineTo(w,oy); 
+    ctx.moveTo(ox,0); ctx.lineTo(ox,h); 
+    ctx.stroke();
     
     // Funksjon
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); 
-    ctx.lineWidth = 2; ctx.beginPath();
+    ctx.lineWidth = 2; 
+    ctx.beginPath();
     
     let lastY = null;
     for(let px=0; px<=w; px+=1) { 
@@ -310,11 +363,19 @@ function drawGraph(f) {
 }
 
 searchBar.oninput = () => {
-    const q = searchBar.value.toLowerCase(); if(!q) return showHome();
-    folderView.style.display = historyPanel.style.display = 'none'; listView.style.display = 'grid'; listView.innerHTML = '';
+    const q = searchBar.value.toLowerCase(); 
+    if(!q) return showHome();
+    
+    folderView.style.display = historyPanel.style.display = 'none'; 
+    listView.style.display = 'grid'; 
+    listView.innerHTML = '';
+    
     calculators.filter(c => c.name.toLowerCase().includes(q)).forEach(c => {
-        const el = document.createElement('div'); el.className = 'card glass-panel'; el.innerHTML = c.name;
-        el.onclick = () => openCalc(c); listView.appendChild(el);
+        const el = document.createElement('div'); 
+        el.className = 'card glass-panel'; 
+        el.innerHTML = c.name;
+        el.onclick = () => openCalc(c); 
+        listView.appendChild(el);
     });
 };
 
@@ -323,13 +384,14 @@ window.onkeydown = (e) => {
     if(e.key === 'Escape') showHome(); 
 };
 
-
 document.getElementById('btn-back-list').onclick = () => {
     document.getElementById('calc-view').style.display = 'none';
     document.getElementById('list-view').style.display = 'grid';
     // Skjul grafen og resultatene for neste gang
     document.getElementById('result-container').style.display = 'none';
+    toggleEnhetssirkel(false); // Skjuler sirkelen
 };
+
 renderFolders();
 
 
