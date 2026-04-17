@@ -23,6 +23,15 @@ let historyData = JSON.parse(localStorage.getItem('calcHistory')) || [];
 let currentFolder = null;
 let currentCalc = null;
 
+// --- GRAF-VARIABLER (For zoom og panorering) ---
+let currentGraphFunc = null;
+let graphScale = 30; // Hvor mange piksler er 1 enhet
+let graphOffsetX = 0;
+let graphOffsetY = 0;
+let isDraggingGraph = false;
+let dragStartX = 0;
+let dragStartY = 0;
+
 const calculators = [
     // GRUNNLEGGENDE
     { id: 1, folder: "Grunnleggende", name: "Prosent", formula: "(p / 100) * tall", html: '<input type="number" id="i1" placeholder="Prosent (%)"><input type="number" id="i2" placeholder="Av tall">', calc: () => {
@@ -281,7 +290,7 @@ function openCalc(c) {
 function showHome() { 
     searchBar.value = ''; 
     renderFolders(); 
-    toggleEnhetssirkel(false); // Skjuler sirkelen
+    toggleEnhetssirkel(false); 
 }
 
 function executeCalc() {
@@ -293,9 +302,16 @@ function executeCalc() {
     
     if(res.graph) { 
         document.getElementById('graph-container').style.display = 'block'; 
-        drawGraph(res.graph); 
+        
+        // Nullstill graf-variabler for et nytt regnestykke
+        currentGraphFunc = res.graph;
+        graphOffsetX = 0; 
+        graphOffsetY = 0; 
+        graphScale = 30; // Standard piksler pr tall
+        drawGraph(); 
     } else { 
         document.getElementById('graph-container').style.display = 'none'; 
+        currentGraphFunc = null;
     }
     
     historyData = [{name: currentCalc.name, res: res.res}, ...historyData].slice(0, 10);
@@ -315,43 +331,101 @@ function renderHistory() {
     list.innerHTML = historyData.length ? historyData.map(h => `<div class="history-item"><b>${h.name}</b><span>${h.res}</span></div>`).join('') : '<i>Ingen historikk enda.</i>';
 }
 
-function drawGraph(f) {
-    canvas.width = canvas.parentElement.clientWidth; 
-    canvas.height = 350;
-    const w=canvas.width, h=canvas.height, ox=w/2, oy=h/2, s=25;
-    ctx.clearRect(0,0,w,h); 
+// =========================================
+// INTERAKTIV GRAF MOTOR
+// =========================================
+
+function drawGraph() {
+    if (!currentGraphFunc) return;
     
-    // Grid
+    // Sett bredde og høyde dynamisk
+    const w = canvas.width = canvas.parentElement.clientWidth; 
+    const h = canvas.height = 350;
+    
+    ctx.clearRect(0, 0, w, h); 
+    
+    // Regn ut hvor origo (0,0) er, basert på panorering (offset)
+    const ox = w / 2 + graphOffsetX; 
+    const oy = h / 2 + graphOffsetY; 
+    
+    // Bestem hvor ofte vi skal tegne linjer/tall basert på zoom
+    let step = 1;
+    if (graphScale < 15) step = 5;
+    if (graphScale < 5) step = 10;
+    if (graphScale > 60) step = 0.5;
+    if (graphScale > 150) step = 0.1;
+
+    // Font-innstillinger for tallene
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = '#888';
+
+    // Tegn rutenett og tall
     ctx.strokeStyle = '#222'; 
     ctx.lineWidth = 1; 
-    ctx.beginPath();
-    for(let i=ox%s;i<w;i+=s){ctx.moveTo(i,0);ctx.lineTo(i,h);} 
-    for(let i=oy%s;i<h;i+=s){ctx.moveTo(0,i);ctx.lineTo(w,i);} 
-    ctx.stroke();
+
+    // X-akse grid & tall
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i = 0; ox + i * graphScale < w || ox - i * graphScale > 0; i += step) {
+        // Positiv X (Høyre)
+        let px = ox + i * graphScale;
+        if (px <= w && px >= 0) {
+            ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke();
+            if (i !== 0) ctx.fillText(i, px, oy + 5);
+        }
+        // Negativ X (Venstre)
+        let nx = ox - i * graphScale;
+        if (i !== 0 && nx >= 0 && nx <= w) {
+            ctx.beginPath(); ctx.moveTo(nx, 0); ctx.lineTo(nx, h); ctx.stroke();
+            ctx.fillText(-i, nx, oy + 5);
+        }
+    }
+
+    // Y-akse grid & tall
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; oy + i * graphScale < h || oy - i * graphScale > 0; i += step) {
+        // Negativ Y (Går nedover på skjermen)
+        let py = oy + i * graphScale;
+        if (py <= h && py >= 0) {
+            ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
+            if (i !== 0) ctx.fillText(-i, ox - 5, py);
+        }
+        // Positiv Y (Går oppover på skjermen)
+        let ny = oy - i * graphScale;
+        if (i !== 0 && ny >= 0 && ny <= h) {
+            ctx.beginPath(); ctx.moveTo(0, ny); ctx.lineTo(w, ny); ctx.stroke();
+            ctx.fillText(i, ox - 5, ny);
+        }
+    }
     
-    // Akser
+    // Tegn selve aksene (Tykke linjer)
     ctx.strokeStyle = '#555'; 
     ctx.lineWidth = 2; 
     ctx.beginPath(); 
-    ctx.moveTo(0,oy); ctx.lineTo(w,oy); 
-    ctx.moveTo(ox,0); ctx.lineTo(ox,h); 
+    ctx.moveTo(0, oy); ctx.lineTo(w, oy); // X-akse
+    ctx.moveTo(ox, 0); ctx.lineTo(ox, h); // Y-akse
     ctx.stroke();
+
+    // Tegn tallet 0 i origo
+    ctx.fillText("0", ox - 5, oy + 12);
     
-    // Funksjon
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); 
+    // Tegn Funksjonen (Den faktiske grafen)
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#00d2ff'; 
     ctx.lineWidth = 2; 
     ctx.beginPath();
     
     let lastY = null;
-    for(let px=0; px<=w; px+=1) { 
-        let mx=(px-ox)/s; 
-        let my=f(mx); 
-        let py=oy-(my*s); 
+    // Går gjennom hver piksel i bredden for å tegne en jevn strek
+    for(let px = 0; px <= w; px += 1) { 
+        let mx = (px - ox) / graphScale; // Gjør om piksler til matte-X
+        let my = currentGraphFunc(mx);   // Spør funksjonen din om matte-Y
+        let py = oy - (my * graphScale); // Gjør om matte-Y tilbake til piksler
         
-        // Sjekker for asymptoter eller store hopp
+        // Unngå stygge vertikale streker ved asymptoter (f.eks rasjonelle funksjoner)
         if (lastY !== null && Math.abs(py - lastY) > h/2) {
-            ctx.stroke(); // Avslutter nåværende linje
-            ctx.beginPath(); // Starter ny linje etter bruddet
+            ctx.stroke(); // Avslutter linjen
+            ctx.beginPath(); // Starter ny etter hoppet
             ctx.moveTo(px, py);
         } else if (!isNaN(py) && isFinite(py)) {
             if (lastY === null) ctx.moveTo(px, py);
@@ -361,6 +435,44 @@ function drawGraph(f) {
     } 
     ctx.stroke();
 }
+
+// Mus og Touch hendelser for grafen (Zoom og Drag)
+canvas.addEventListener('mousedown', (e) => {
+    isDraggingGraph = true;
+    dragStartX = e.clientX - graphOffsetX;
+    dragStartY = e.clientY - graphOffsetY;
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (!isDraggingGraph) return;
+    graphOffsetX = e.clientX - dragStartX;
+    graphOffsetY = e.clientY - dragStartY;
+    drawGraph();
+});
+
+window.addEventListener('mouseup', () => {
+    isDraggingGraph = false;
+});
+
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault(); // Hindrer siden i å scrolle
+    const zoomIntensity = 0.1;
+    const wheel = e.deltaY < 0 ? 1 : -1;
+    let zoom = Math.exp(wheel * zoomIntensity);
+    
+    graphScale *= zoom;
+    
+    // Sett grenser for hvor mye man kan zoome
+    if (graphScale < 2) graphScale = 2;
+    if (graphScale > 500) graphScale = 500;
+    
+    drawGraph();
+}, { passive: false });
+
+
+// =========================================
+// SØK OG NAVIGASJON
+// =========================================
 
 searchBar.oninput = () => {
     const q = searchBar.value.toLowerCase(); 
@@ -387,9 +499,8 @@ window.onkeydown = (e) => {
 document.getElementById('btn-back-list').onclick = () => {
     document.getElementById('calc-view').style.display = 'none';
     document.getElementById('list-view').style.display = 'grid';
-    // Skjul grafen og resultatene for neste gang
     document.getElementById('result-container').style.display = 'none';
-    toggleEnhetssirkel(false); // Skjuler sirkelen
+    toggleEnhetssirkel(false);
 };
 
 renderFolders();
@@ -406,12 +517,10 @@ const vinkelInput = document.getElementById('vinkelInput');
 function oppdaterSirkel() {
     if (!ctxSirkel) return;
     
-    // Canvas er 300x300, så senteret er på 150,150
     const senterX = canvasSirkel.width / 2;
     const senterY = canvasSirkel.height / 2;
     const radius = 100; 
 
-    // Hent vinkel fra input (standard 0 hvis tom)
     let grader = parseFloat(vinkelInput.value) || 0;
     let radianer = grader * (Math.PI / 180);
 
@@ -419,25 +528,20 @@ function oppdaterSirkel() {
     let cosVerdi = Math.cos(radianer);
     let tanVerdi = Math.tan(radianer);
 
-    // Oppdater tallene i HTML
     document.getElementById('sinVerdi').innerText = sinVerdi.toFixed(4);
     document.getElementById('cosVerdi').innerText = cosVerdi.toFixed(4);
     
-    // Håndter uendelig tangens (90 og 270 grader)
     if (grader % 180 === 90 || grader % 180 === -90) {
         document.getElementById('tanVerdi').innerText = "Udefinert";
     } else {
         document.getElementById('tanVerdi').innerText = tanVerdi.toFixed(4);
     }
 
-    // Finn koordinater på sirkelen
     let punktX = senterX + (cosVerdi * radius);
     let punktY = senterY - (sinVerdi * radius);
 
-    // 1. Tøm lerretet for forrige tegning
     ctxSirkel.clearRect(0, 0, canvasSirkel.width, canvasSirkel.height);
     
-    // 2. Tegn x- og y-akser (Svake, hvite linjer)
     ctxSirkel.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctxSirkel.lineWidth = 1;
     ctxSirkel.beginPath();
@@ -447,8 +551,6 @@ function oppdaterSirkel() {
     ctxSirkel.lineTo(senterX, canvasSirkel.height);
     ctxSirkel.stroke();
 
-    // 3. Tegn selve enhetssirkelen
-    // Prøver å hente CSS-variabelen for primary-fargen, faller tilbake på hvit
     const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#ffffff';
     ctxSirkel.strokeStyle = primaryColor;
     ctxSirkel.lineWidth = 2;
@@ -456,33 +558,29 @@ function oppdaterSirkel() {
     ctxSirkel.arc(senterX, senterY, radius, 0, 2 * Math.PI);
     ctxSirkel.stroke();
 
-    // 4. Tegn hypotenusen (linjen fra senter til punktet)
     ctxSirkel.strokeStyle = '#ffffff';
     ctxSirkel.beginPath();
     ctxSirkel.moveTo(senterX, senterY);
     ctxSirkel.lineTo(punktX, punktY);
     ctxSirkel.stroke();
     
-    // 5. Tegn punktet på sirkelbuen
     ctxSirkel.fillStyle = primaryColor;
     ctxSirkel.beginPath();
     ctxSirkel.arc(punktX, punktY, 5, 0, 2 * Math.PI);
     ctxSirkel.fill();
 }
 
-// Lytt etter endringer hver gang brukeren skriver et tall
 if (vinkelInput) {
     vinkelInput.addEventListener('input', oppdaterSirkel);
 }
 
-// Hjelpefunksjon for å vise eller skjule sirkelen
 function toggleEnhetssirkel(skalVises) {
     const container = document.getElementById('enhetssirkel-container');
     if (!container) return;
     
     if (skalVises) {
         container.style.display = 'block';
-        oppdaterSirkel(); // Tegner sirkelen så snart den blir synlig
+        oppdaterSirkel(); 
     } else {
         container.style.display = 'none';
     }
