@@ -137,6 +137,87 @@ const calculators = [
         let grad = Math.asin(o/h)*(180/Math.PI);
         return { res: `Vinkel: ${grad.toFixed(2)}°`, exp: `asin(${o}/${h}) = ${grad.toFixed(2)}°` };
     }},
+    { id: 38, folder: "Geometri", name: "Trekantløseren", formula: "Sinus- & Cosinussetningen", html: `
+        <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 10px;">Fyll inn <b>minst 3 verdier</b> (inkludert minst én side). Bruk grader for vinkler.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <input type="number" id="trigA" placeholder="Side a">
+            <input type="number" id="trigvA" placeholder="Vinkel A (°)">
+            <input type="number" id="trigB" placeholder="Side b">
+            <input type="number" id="trigvB" placeholder="Vinkel B (°)">
+            <input type="number" id="trigC" placeholder="Side c">
+            <input type="number" id="trigvC" placeholder="Vinkel C (°)">
+        </div>`, 
+        calc: () => {
+            const rad = (deg) => deg * (Math.PI / 180);
+            const deg = (rad) => rad * (180 / Math.PI);
+            
+            let a = parseFloat(document.getElementById('trigA').value);
+            let b = parseFloat(document.getElementById('trigB').value);
+            let c = parseFloat(document.getElementById('trigC').value);
+            let A = parseFloat(document.getElementById('trigvA').value);
+            let B = parseFloat(document.getElementById('trigvB').value);
+            let C = parseFloat(document.getElementById('trigvC').value);
+
+            let kjente = [a, b, c, A, B, C].filter(val => !isNaN(val)).length;
+            let kjenteSider = [a, b, c].filter(val => !isNaN(val)).length;
+
+            if (kjente < 3 || kjenteSider === 0) {
+                return { res: "Feil: Trenger mer info", exp: "Du må fylle inn minst 3 verdier, og minst én av dem må være en lengde (side)." };
+            }
+            
+            let forrigeKjente = 0;
+            let iterations = 0;
+            
+            while (kjente < 6 && iterations < 10 && forrigeKjente !== kjente) {
+                forrigeKjente = kjente;
+                iterations++;
+
+                if (!isNaN(A) && !isNaN(B) && isNaN(C)) C = 180 - A - B;
+                if (!isNaN(A) && !isNaN(C) && isNaN(B)) B = 180 - A - C;
+                if (!isNaN(B) && !isNaN(C) && isNaN(A)) A = 180 - B - C;
+
+                if (isNaN(a) && !isNaN(b) && !isNaN(c) && !isNaN(A)) a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(rad(A)));
+                if (isNaN(b) && !isNaN(a) && !isNaN(c) && !isNaN(B)) b = Math.sqrt(a*a + c*c - 2*a*c*Math.cos(rad(B)));
+                if (isNaN(c) && !isNaN(a) && !isNaN(b) && !isNaN(C)) c = Math.sqrt(a*a + b*b - 2*a*b*Math.cos(rad(C)));
+
+                if (isNaN(A) && !isNaN(a) && !isNaN(b) && !isNaN(c)) A = deg(Math.acos((b*b + c*c - a*a) / (2*b*c)));
+                if (isNaN(B) && !isNaN(a) && !isNaN(b) && !isNaN(c)) B = deg(Math.acos((a*a + c*c - b*b) / (2*a*c)));
+                if (isNaN(C) && !isNaN(a) && !isNaN(b) && !isNaN(c)) C = deg(Math.acos((a*a + b*b - c*c) / (2*a*b)));
+
+                if (!isNaN(A) && !isNaN(a)) {
+                    let forholdsTall = a / Math.sin(rad(A));
+                    if (isNaN(b) && !isNaN(B)) b = forholdsTall * Math.sin(rad(B));
+                    if (isNaN(c) && !isNaN(C)) c = forholdsTall * Math.sin(rad(C));
+                }
+                if (!isNaN(B) && !isNaN(b)) {
+                    let forholdsTall = b / Math.sin(rad(B));
+                    if (isNaN(a) && !isNaN(A)) a = forholdsTall * Math.sin(rad(A));
+                    if (isNaN(c) && !isNaN(C)) c = forholdsTall * Math.sin(rad(C));
+                }
+
+                kjente = [a, b, c, A, B, C].filter(val => !isNaN(val)).length;
+            }
+
+            if (kjente < 6) {
+                 return { res: "Ufullstendig", exp: "Informasjonen er ikke nok til å løse hele trekanten, eller kombinasjonen er matematisk umulig." };
+            }
+
+            let s = (a + b + c) / 2;
+            let areal = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+
+            document.getElementById('trigA').value = a.toFixed(2);
+            document.getElementById('trigB').value = b.toFixed(2);
+            document.getElementById('trigC').value = c.toFixed(2);
+            document.getElementById('trigvA').value = A.toFixed(2);
+            document.getElementById('trigvB').value = B.toFixed(2);
+            document.getElementById('trigvC').value = C.toFixed(2);
+
+            return { 
+                res: "Trekant Løst!", 
+                exp: `Areal: ${areal.toFixed(2)}\n\nSider:\na = ${a.toFixed(2)}\nb = ${b.toFixed(2)}\nc = ${c.toFixed(2)}\n\nVinkler:\n∠A = ${A.toFixed(2)}°\n∠B = ${B.toFixed(2)}°\n∠C = ${C.toFixed(2)}°` 
+            };
+        }
+    },
 
     // MATTE
     { id: 3, folder: "Matte", name: "Brøk (Forenkle)", formula: "a/b -> c/d", html: '<input type="number" id="i1" placeholder="Teller"><input type="number" id="i2" placeholder="Nevner">', calc: () => {
@@ -224,7 +305,7 @@ const calculators = [
         <div style="text-align: left; padding: 10px; color: #ccc; line-height: 1.6;">
             <p style="margin-bottom: 15px;">Dette er et komplett, web-basert matematikkverktøy utviklet av <b style="color: var(--primary);">Leon Aabak</b>.</p>
             <ul style="margin-bottom: 15px; padding-left: 20px;">
-                <li style="margin-bottom: 8px;"><b>37 Funksjoner:</b> Alt fra grunnleggende prosent til asymptoter og BMI.</li>
+                <li style="margin-bottom: 8px;"><b>38 Funksjoner:</b> Alt fra grunnleggende prosent til trigonometri og Trekantløser.</li>
                 <li style="margin-bottom: 8px;"><b>Valuta i sanntid:</b> Hent oppdaterte kurser direkte fra nettet.</li>
                 <li style="margin-bottom: 8px;"><b>Avansert Grafmotor:</b> Tegn grafer med interaktiv zoom og panorering.</li>
                 <li><b>Enhetssirkel:</b> Visuell og dynamisk forståelse av trigonometri.</li>
@@ -312,7 +393,6 @@ function openCalc(c) {
     document.getElementById('pre-calc-formula').innerText = c.formula;
     document.getElementById('input-container').innerHTML = c.html; 
     
-    // --- KOBLE PÅ ENHETSSIRKEL FOR TRIGONOMETRI ---
     if (c.id === 15 || c.id === 16 || c.id === 17) {
         document.getElementById('result-container').style.display = 'block';
         toggleEnhetssirkel(true);
