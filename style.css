@@ -269,6 +269,16 @@ canvas {
     height: 350px; 
 }
 
+#graphCanvas {
+    cursor: grab;
+    /* Hindrer mobiler i å scrolle nettsiden mens man panorerer i grafen */
+    touch-action: none; 
+}
+
+#graphCanvas:active {
+    cursor: grabbing;
+}
+
 /* --- Historikk --- */
 #history-panel { 
     width: 100%; 
@@ -353,7 +363,6 @@ button:focus-visible {
 }
 
 #enhetssirkel {
-    /* Gir sirkelen en subtil glød som matcher primary-fargen din */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     display: block;
     margin: 0 auto;
@@ -364,13 +373,12 @@ button:focus-visible {
     box-shadow: 0 0 8px var(--primary);
 }
 
-/* Skjuler opp/ned pilene på input-feltet i noen nettlesere for et renere utseende */
 #vinkelInput::-webkit-outer-spin-button,
 #vinkelInput::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 #vinkelInput[type=number] {
-    -moz-appearance: textfield; /* Sørger for at det også fungerer i Firefox */
+    -moz-appearance: textfield;
     appearance: textfield;
 }
