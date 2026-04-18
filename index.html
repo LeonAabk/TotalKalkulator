@@ -18,7 +18,6 @@
         <div style="position: absolute; top: 0; right: 20px; display: flex; gap: 10px;">
             <button data-ms-content="!pro" data-ms-modal="signup" class="action-btn" style="padding: 8px 15px; font-size: 0.9rem; margin: 0; width: auto;">⚡ Bli Pro</button>
             <button data-ms-content="!pro" data-ms-modal="login" class="back-btn" style="margin: 0; padding: 8px 15px;">Logg inn</button>
-            
             <button data-ms-content="pro" data-ms-action="logout" class="back-btn" style="margin: 0; padding: 8px 15px;">Logg ut</button>
         </div>
     </header>
@@ -74,14 +73,13 @@
 
                     <div id="enhetssirkel-panel" class="glass-panel verktoy-boks">
                         <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">⭕ Enhetssirkel</h3>
-                        <canvas id="enhetssirkel" width="250" height="250" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 250px; display: block; margin: 0 auto; box-shadow: none;"></canvas>
+                        <canvas id="enhetssirkel" width="250" height="250" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 250px; display: block; margin: 0 auto;"></canvas>
                         
                         <div class="kontroller" style="margin-top: 15px;">
                             <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
                                 <label for="vinkelInput" style="font-size: 0.9rem; color: #ccc;">Vinkel (°):</label>
                                 <input type="number" id="vinkelInput" value="45" min="-360" max="360" style="padding: 6px; width: 70px; text-align: center; border-radius: 5px; border: 1px solid var(--primary); background: transparent; color: inherit; font-size: 1rem; margin-bottom: 0;">
                             </div>
-                            
                             <div id="trig-resultater" style="display: flex; justify-content: space-around; font-size: 0.9rem; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
                                 <p>Sin: <span id="sinVerdi" style="font-weight: bold; color: var(--primary);">-</span></p>
                                 <p>Cos: <span id="cosVerdi" style="font-weight: bold; color: var(--primary);">-</span></p>
