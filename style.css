@@ -40,24 +40,25 @@ body {
 }
 
 /* --- Header & Logo --- */
-.header-container { 
-    margin-top: 40px; 
-    text-align: center; 
-    width: 100%; 
+.header-container {
+    margin-top: 40px;
+    text-align: center;
+    width: 100%;
 }
 
 .header-logo {
-    display: block; 
-    width: 100%; 
-    border: none; 
-    background: none; 
+    display: block;
+    width: 100%;
+    border: none;
+    background: none;
     cursor: pointer;
-    font-size: clamp(2.5rem, 8vw, 3.5rem); 
+    font-size: clamp(2.5rem, 8vw, 3.5rem);
     font-weight: 800;
     background: linear-gradient(90deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text; 
+    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-align: center; 
+    text-align: center;
+    font-family: inherit;
     outline: none;
 }
 
@@ -87,13 +88,13 @@ body {
     cursor: pointer; 
     border: 2px solid transparent; 
     transition: 0.3s; 
-    padding: 0; 
+    padding: 0;
 }
 
 .theme-dot.active { 
     border-color: white; 
     transform: scale(1.3); 
-    box-shadow: 0 0 10px var(--primary); 
+    box-shadow: 0 0 10px var(--primary);
 }
 
 /* --- NY LAYOUT: TO KOLONNER --- */
@@ -129,13 +130,12 @@ main {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    gap: 20px;
 }
 
-/* Løst: Sørger for at boksene ikke klemmer hverandre i høyre kolonne */
 .verktoy-boks {
     padding: 20px;
     width: 100%;
-    margin-bottom: 20px; 
 }
 
 @media (max-width: 800px) {
@@ -156,7 +156,7 @@ main {
 
 #search-container { 
     width: 100%; 
-    max-width: 1160px; 
+    max-width: 1160px; /* Tilpasset den nye layout-bredden */
     padding: 0 20px; 
     margin-bottom: 20px; 
 }
@@ -209,7 +209,7 @@ main {
     background: none; 
     border: none; 
     cursor: pointer; 
-    padding: 0; 
+    padding: 0;
 }
 
 .star-btn.active { 
@@ -251,7 +251,9 @@ input:focus, select:focus {
     border-color: var(--primary); 
 }
 
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { 
+/* Fjerner stygge piler på tall-inputs */
+input[type="number"]::-webkit-inner-spin-button, 
+input[type="number"]::-webkit-outer-spin-button { 
     -webkit-appearance: none; 
     margin: 0; 
 }
@@ -317,16 +319,19 @@ input[type="number"] { -moz-appearance: textfield; }
     margin-top: 20px; 
 }
 
-/* Løst: Spesifiserer at 350px høyde KUN gjelder for hovedgrafen, ikke sideverktøyene */
-#graphCanvas { 
+canvas { 
     display: block; 
     width: 100%; 
     height: 350px; 
-    cursor: grab; 
+}
+
+#graphCanvas {
+    cursor: grab;
     touch-action: none; 
 }
-#graphCanvas:active { 
-    cursor: grabbing; 
+
+#graphCanvas:active {
+    cursor: grabbing;
 }
 
 /* --- Historikk --- */
@@ -335,7 +340,7 @@ input[type="number"] { -moz-appearance: textfield; }
     border-bottom: 1px solid rgba(255,255,255,0.05); 
     display: flex; 
     justify-content: space-between; 
-    font-size: 0.95rem; 
+    font-size: 0.95rem;
 }
 
 .clear-history { 
@@ -347,23 +352,24 @@ input[type="number"] { -moz-appearance: textfield; }
     font-weight: bold; 
     opacity: 0.7; 
     transition: 0.3s; 
-    padding: 5px; 
+    padding: 5px;
 }
 
 .clear-history:hover { 
     opacity: 1; 
 }
 
-#history-list { 
-    scrollbar-width: thin; 
-    scrollbar-color: var(--primary) transparent; 
+/* Egendefinert rullefelt for historikken */
+#history-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
 }
-#history-list::-webkit-scrollbar { 
-    width: 6px; 
+#history-list::-webkit-scrollbar {
+    width: 6px;
 }
-#history-list::-webkit-scrollbar-thumb { 
-    background-color: var(--primary); 
-    border-radius: 10px; 
+#history-list::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 10px;
 }
 
 /* --- UI Komponenter --- */
@@ -389,18 +395,18 @@ input[type="number"] { -moz-appearance: textfield; }
     margin-top: 40px; 
     color: rgba(255,255,255,0.2); 
     font-size: 0.8rem; 
-    text-align: center; 
+    text-align: center;
 }
 
-.visually-hidden { 
-    position: absolute; 
-    width: 1px; 
-    height: 1px; 
-    padding: 0; 
-    margin: -1px; 
-    overflow: hidden; 
-    clip: rect(0, 0, 0, 0); 
-    border: 0; 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 
 /* --- ANIMASJONER OG OVERGANGER --- */
@@ -412,3 +418,5 @@ input[type="number"] { -moz-appearance: textfield; }
     from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
 }
+ 
+ 
