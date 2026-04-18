@@ -435,8 +435,35 @@ async function openCalc(c) {
 
 function showHome() { 
     searchBar.value = ''; 
+    // Sikrer at kalkulatoren skjules og mappene vises
+    calcView.style.display = 'none';
+    listView.style.display = 'none';
+    
+    // Viser verktøyene igjen på små skjermer
+    document.getElementById('hurtig-graf-panel').style.display = 'block';
+    document.getElementById('enhetssirkel-panel').style.display = 'block';
+    historyPanel.style.display = 'block';
+    
     renderFolders(); 
 }
+
+document.getElementById('btn-back-list').onclick = () => {
+    document.getElementById('calc-view').style.display = 'none';
+    document.getElementById('result-container').style.display = 'none';
+    
+    // Viser verktøyene igjen
+    document.getElementById('hurtig-graf-panel').style.display = 'block';
+    document.getElementById('enhetssirkel-panel').style.display = 'block';
+    historyPanel.style.display = 'block';
+    
+    // Hvis vi var i et søk, gå tilbake til forsiden. 
+    // Hvis ikke, tegn opp den mappen vi var i på nytt for å være sikker på at den er der.
+    if (searchBar.value) {
+        showHome();
+    } else {
+        openFolder(currentFolder);
+    }
+};
 
 async function executeCalc() {
     if(!currentCalc) return;
