@@ -34,7 +34,7 @@ let dragStartY = 0;
 
 const calculators = [
     // ==========================================
-    // GRATIS MAPPER (Grunnleggende, Matte, Statistikk, Diverse)
+    // GRATIS MAPPER
     // ==========================================
 
     // GRUNNLEGGENDE
@@ -94,15 +94,12 @@ const calculators = [
                 <li><b>Enhetssirkel:</b> Visuell og dynamisk forståelse av trigonometri.</li>
             </ul>
         </div>`, 
-        calc: () => ({
-            res: "Leon Aabak V10 Pro", 
-            exp: "Håper du får god bruk for Total Kalkulator!"
-        }) 
+        calc: () => ({ res: "Leon Aabak V10 Pro", exp: "Håper du får god bruk for Total Kalkulator!" }) 
     },
 
 
     // ==========================================
-    // PRO MAPPER (Krever Memberstack Abonnement)
+    // PRO MAPPER (Krever Memberstack)
     // ==========================================
 
     // ALGEBRA
@@ -340,6 +337,8 @@ function renderFolders() {
     folderView.style.display = 'grid'; 
     listView.style.display = 'none'; 
     calcView.style.display = 'none'; 
+    
+    // Gjenopprett synlighet for verktøy på forsiden
     historyPanel.style.display = 'block';
     document.getElementById('hurtig-graf-panel').style.display = 'block';
     document.getElementById('enhetssirkel-panel').style.display = 'block';
@@ -377,8 +376,6 @@ function openFolder(name) {
         const el = document.createElement('div'); 
         el.className = 'card glass-panel';
         const isFav = favorites.includes(c.id);
-        
-        // Legger til et lite hengelås-ikon i navnet hvis kalkulatoren krever Pro
         const proIcon = c.requiresPro ? ' <span style="font-size: 0.8rem; opacity: 0.7;">🔒</span>' : '';
         
         el.innerHTML = `<button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${c.id}, event)">★</button> ${c.name}${proIcon}`;
@@ -395,14 +392,11 @@ function toggleFav(id, e) {
     openFolder(currentFolder);
 }
 
-// SJEKKER OM BRUKEREN HAR TILGANG FØR KALKULATOREN ÅPNES
+// === SJEKKER MEMBERSTACK FØR KALKULATOREN ÅPNES ===
 async function openCalc(c) {
-    
-    // Memberstack Gating Logikk
     if (c.requiresPro) {
         try {
             const memberstack = window.$memberstackDom;
-            // Hvis Memberstack ikke har lastet inn skikkelig enda
             if (!memberstack) {
                 alert("Laster betalingssystemet... prøv igjen om et sekund.");
                 return;
@@ -422,7 +416,6 @@ async function openCalc(c) {
         }
     }
 
-    // Hvis funksjonen er gratis ELLER brukeren har betalt, åpne den:
     currentCalc = c; 
     listView.style.display = 'none'; 
     calcView.style.display = 'block';
@@ -603,10 +596,11 @@ canvas.addEventListener('wheel', (e) => {
 // =========================================
 
 const hurtigCanvas = document.getElementById('hurtigCanvas');
-const hurtigCtx = hurtigCanvas.getContext('2d');
+const hurtigCtx = hurtigCanvas ? hurtigCanvas.getContext('2d') : null;
 const hurtigInput = document.getElementById('hurtigGrafInput');
 
 function tegnHurtigGraf() {
+    if(!hurtigCtx) return;
     const w = hurtigCanvas.width, h = hurtigCanvas.height, s = 15;
     hurtigCtx.clearRect(0,0,w,h);
     
