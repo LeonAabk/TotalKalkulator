@@ -59,17 +59,20 @@ const calculators = [
         folder: "Grunnleggende", 
         name: "Gange (Flere tall)", 
         formula: "a * b * c ...", 
-        html: '<input type="text" id="i1" placeholder="Eks: 2, 3, 4, 5">', 
+        html: '<input type="text" id="i1" placeholder="Eks: 2, 3, 4">', 
         calc: () => {
-            // Henter teksten, deler den opp ved komma, og gjør om til en liste med tall
-            let arr = document.getElementById('i1').value.split(',').map(Number).filter(x => !isNaN(x));
+            // Henter tekst, fjerner mellomrom, og gjør om til gyldige tall
+            let arr = document.getElementById('i1').value
+                .split(',')
+                .map(x => x.trim())       // Fjerner mellomrom
+                .filter(x => x !== "")    // Ignorerer tomme felter hvis man f.eks. slutter med et komma
+                .map(Number)              // Gjør om til tall
+                .filter(x => !isNaN(x));  // Sørger for at alt er ekte tall
             
-            // Sjekker om brukeren faktisk har skrevet inn noen gyldige tall
             if (arr.length === 0) {
-                return { res: "Feil: Skriv inn tall", exp: "Husk å skille tallene med komma (,)" };
+                return { res: "Feil: Mangler tall", exp: "Husk å skille tallene med komma." };
             }
 
-            // Ganger sammen alle tallene i listen
             let produkt = arr.reduce((a, b) => a * b, 1); 
             
             return { 
