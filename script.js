@@ -131,123 +131,100 @@ const calculators = [
         let x = -b/(2*a);
         return { res: `x = ${x.toFixed(2)}`, exp: `Symmetrilinje (der f'(x)=0):\nx = -b / 2a = -${b} / (2*${a})` };
     }},
-    // ALGEBRA: Faktorisering av Andregrad
-    { 
-        id: 48, 
-        folder: "Algebra", 
-        name: "Faktorisering (Andregrad)", 
-        formula: "ax² + bx + c", 
-        html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', 
-        calc: () => {
-            let a = parseFloat(document.getElementById('i1').value);
-            let b = parseFloat(document.getElementById('i2').value);
-            let c = parseFloat(document.getElementById('i3').value);
+{ id: 48, folder: "Algebra", name: "Faktorisering (Andregrad)", formula: "ax² + bx + c", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', calc: () => {
+        let a = parseFloat(document.getElementById('i1').value);
+        let b = parseFloat(document.getElementById('i2').value);
+        let c = parseFloat(document.getElementById('i3').value);
 
-            if (isNaN(a) || isNaN(b) || isNaN(c)) return { res: "Feil: Fyll inn a, b og c" };
-            if (a === 0) return { res: "Feil: a kan ikke være 0" };
+        if (isNaN(a) || isNaN(b) || isNaN(c)) return { res: "Feil: Fyll inn a, b og c" };
+        if (a === 0) return { res: "Feil: a kan ikke være 0" };
 
-            let d = (b * b) - (4 * a * c);
-            if (d < 0) return { res: "Kan ikke faktoriseres", exp: "Diskriminanten er negativ. Uttrykket har ingen reelle røtter." };
+        let d = (b * b) - (4 * a * c);
+        if (d < 0) return { res: "Kan ikke faktoriseres", exp: "Diskriminanten er negativ. Uttrykket har ingen reelle røtter." };
 
-            let x1 = (-b + Math.sqrt(d)) / (2 * a);
-            let x2 = (-b - Math.sqrt(d)) / (2 * a);
+        let x1 = (-b + Math.sqrt(d)) / (2 * a);
+        let x2 = (-b - Math.sqrt(d)) / (2 * a);
 
-            // Hjelpefunksjon for å formatere (x - r) pent
-            let formatTerm = (r) => {
-                if (r === 0) return "x";
-                return r > 0 ? `(x - ${r.toFixed(2)})` : `(x + ${Math.abs(r).toFixed(2)})`;
-            };
+        let formatTerm = (r) => {
+            if (r === 0) return "x";
+            return r > 0 ? `(x - ${r.toFixed(2)})` : `(x + ${Math.abs(r).toFixed(2)})`;
+        };
 
-            let aStr = a === 1 ? "" : a === -1 ? "-" : `${a}`;
-            let resStr = "";
+        let aStr = a === 1 ? "" : a === -1 ? "-" : `${a}`;
+        let resStr = "";
 
-            if (d === 0) resStr = `${aStr}${formatTerm(x1)}²`; // Dobbeltrot
-            else resStr = `${aStr}${formatTerm(x1)}${formatTerm(x2)}`;
+        if (d === 0) resStr = `${aStr}${formatTerm(x1)}²`; 
+        else resStr = `${aStr}${formatTerm(x1)}${formatTerm(x2)}`;
 
-            // Fjerner unødvendige desimaler hvis røttene er heltall
-            resStr = resStr.replace(/\.00/g, "");
+        resStr = resStr.replace(/\.00/g, "");
 
-            return {
-                res: resStr,
-                exp: `1. Finner røttene med ABC-formelen:\n   x1 = ${x1.toFixed(2)}, x2 = ${x2.toFixed(2)}\n\n2. Setter inn i formelen a(x - x1)(x - x2):\n   Resultat: ${resStr}`,
-                graph: (x) => a * x * x + b * x + c
-            };
+        return {
+            res: resStr,
+            exp: `1. Finner røttene med ABC-formelen:\n   x1 = ${x1.toFixed(2)}, x2 = ${x2.toFixed(2)}\n\n2. Setter inn i formelen a(x - x1)(x - x2):\n   Resultat: ${resStr}`,
+            graph: (x) => a * x * x + b * x + c
+        };
+    }},
+    { id: 49, folder: "Algebra", name: "Faktorisering (Tredjegrad)", formula: "ax³ + bx² + cx + d", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c"><input type="number" id="i4" placeholder="d">', calc: () => {
+        let a = parseFloat(document.getElementById('i1').value);
+        let b = parseFloat(document.getElementById('i2').value);
+        let c = parseFloat(document.getElementById('i3').value);
+        let d = parseFloat(document.getElementById('i4').value);
+
+        if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) return { res: "Feil: Fyll inn a, b, c og d" };
+        if (a === 0) return { res: "Feil: a kan ikke være 0" };
+
+        let root1 = null;
+        for (let i = -1000; i <= 1000; i++) {
+            if (Math.abs(a*i*i*i + b*i*i + c*i + d) < 0.0001) {
+                root1 = i;
+                break;
+            }
         }
-    },
-        // ALGEBRA: Faktorisering av Tredjegrad
-    { 
-        id: 49, 
-        folder: "Algebra", 
-        name: "Faktorisering (Tredjegrad)", 
-        formula: "ax³ + bx² + cx + d", 
-        html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c"><input type="number" id="i4" placeholder="d">', 
-        calc: () => {
-            let a = parseFloat(document.getElementById('i1').value);
-            let b = parseFloat(document.getElementById('i2').value);
-            let c = parseFloat(document.getElementById('i3').value);
-            let d = parseFloat(document.getElementById('i4').value);
 
-            if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) return { res: "Feil: Fyll inn a, b, c og d" };
-            if (a === 0) return { res: "Feil: a kan ikke være 0" };
-
-            // 1. Finner første rot ved å teste heltall (vanligst i skoleoppgaver)
-            let root1 = null;
-            for (let i = -1000; i <= 1000; i++) {
-                if (Math.abs(a*i*i*i + b*i*i + c*i + d) < 0.0001) {
-                    root1 = i;
-                    break;
-                }
-            }
-
-            if (root1 === null) {
-                return { res: "For komplisert", exp: "Kalkulatoren støtter kun faktorisering hvis minst én av røttene er et heltall (som er standard i de fleste matteoppgaver)." };
-            }
-
-            // 2. Polynomdivisjon (ax^3 + bx^2 + cx + d) / (x - root1) = Ax^2 + Bx + C
-            let A = a;
-            let B = b + A * root1;
-            let C = c + B * root1;
-
-            // 3. Faktoriserer det gjenværende andregradsuttrykket (Ax^2 + Bx + C)
-            let disk = (B * B) - (4 * A * C);
-            let root2 = null, root3 = null;
-
-            if (disk >= 0) {
-                root2 = (-B + Math.sqrt(disk)) / (2 * A);
-                root3 = (-B - Math.sqrt(disk)) / (2 * A);
-            }
-
-            let formatTerm = (r) => {
-                if (r === 0) return "x";
-                return r > 0 ? `(x - ${r.toFixed(2)})` : `(x + ${Math.abs(r).toFixed(2)})`;
-            };
-
-            let aStr = a === 1 ? "" : a === -1 ? "-" : `${a}`;
-            let resStr = `${aStr}${formatTerm(root1)}`;
-            let expStr = `1. Gjettet første rot ved å prøve tall:\n   x1 = ${root1}\n\n2. Utførte polynomdivisjon med (x - ${root1}).\n   Fikk: ${A}x² + ${B}x + ${C}\n\n`;
-
-            if (disk < 0) {
-                resStr += `(${A}x² ${B >= 0 ? '+ '+B : '- '+Math.abs(B)}x ${C >= 0 ? '+ '+C : '- '+Math.abs(C)})`;
-                expStr += `3. Andregradsuttrykket kan ikke faktoriseres videre (negativ diskriminant).`;
-            } else if (disk === 0) {
-                resStr += `${formatTerm(root2)}²`;
-                expStr += `3. Faktoriserte andregradsuttrykket og fikk en dobbeltrot: x = ${root2.toFixed(2)}`;
-            } else {
-                resStr += `${formatTerm(root2)}${formatTerm(root3)}`;
-                expStr += `3. Faktoriserte andregradsuttrykket med ABC-formelen.\n   x2 = ${root2.toFixed(2)}, x3 = ${root3.toFixed(2)}`;
-            }
-
-            // Renser opp teksten for overflødige nuller
-            resStr = resStr.replace(/\.00/g, "");
-
-            return {
-                res: resStr,
-                exp: expStr,
-                graph: (x) => a*x*x*x + b*x*x + c*x + d
-            };
+        if (root1 === null) {
+            return { res: "For komplisert", exp: "Kalkulatoren støtter kun faktorisering hvis minst én av røttene er et heltall." };
         }
-    },
 
+        let A = a;
+        let B = b + A * root1;
+        let C = c + B * root1;
+
+        let disk = (B * B) - (4 * A * C);
+        let root2 = null, root3 = null;
+
+        if (disk >= 0) {
+            root2 = (-B + Math.sqrt(disk)) / (2 * A);
+            root3 = (-B - Math.sqrt(disk)) / (2 * A);
+        }
+
+        let formatTerm = (r) => {
+            if (r === 0) return "x";
+            return r > 0 ? `(x - ${r.toFixed(2)})` : `(x + ${Math.abs(r).toFixed(2)})`;
+        };
+
+        let aStr = a === 1 ? "" : a === -1 ? "-" : `${a}`;
+        let resStr = `${aStr}${formatTerm(root1)}`;
+        let expStr = `1. Gjettet første rot ved å prøve heltall:\n   x1 = ${root1}\n\n2. Utførte polynomdivisjon med (x - ${root1}).\n   Fikk: ${A}x² + ${B}x + ${C}\n\n`;
+
+        if (disk < 0) {
+            resStr += `(${A}x² ${B >= 0 ? '+ '+B : '- '+Math.abs(B)}x ${C >= 0 ? '+ '+C : '- '+Math.abs(C)})`;
+            expStr += `3. Andregradsuttrykket kan ikke faktoriseres videre (negativ diskriminant).`;
+        } else if (disk === 0) {
+            resStr += `${formatTerm(root2)}²`;
+            expStr += `3. Faktoriserte andregradsuttrykket og fikk en dobbeltrot: x = ${root2.toFixed(2)}`;
+        } else {
+            resStr += `${formatTerm(root2)}${formatTerm(root3)}`;
+            expStr += `3. Faktoriserte andregradsuttrykket med ABC-formelen.\n   x2 = ${root2.toFixed(2)}, x3 = ${root3.toFixed(2)}`;
+        }
+
+        resStr = resStr.replace(/\.00/g, "");
+
+        return {
+            res: resStr,
+            exp: expStr,
+            graph: (x) => a*x*x*x + b*x*x + c*x + d
+        };
+    }},
 
     // GEOMETRI (8)
     { id: 5, folder: "Geometri", name: "Pytagoras", formula: "a² + b² = c²", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b">', calc: () => {
