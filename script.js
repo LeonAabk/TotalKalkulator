@@ -174,8 +174,7 @@ const calculators = [
             };
         }
     },
-
-    // ALGEBRA: Faktorisering av Tredjegrad
+        // ALGEBRA: Faktorisering av Tredjegrad
     { 
         id: 49, 
         folder: "Algebra", 
@@ -248,6 +247,7 @@ const calculators = [
             };
         }
     },
+
 
     // GEOMETRI (8)
     { id: 5, folder: "Geometri", name: "Pytagoras", formula: "a² + b² = c²", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b">', calc: () => {
