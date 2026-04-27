@@ -54,6 +54,30 @@ const calculators = [
         let x = parseFloat(document.getElementById('i1').value);
         return x < 0 ? {res: "Feil: Negativ rot"} : { res: Math.sqrt(x).toFixed(4), exp: `√${x} = ${Math.sqrt(x).toFixed(4)}` };
     }},
+    { 
+        id: 41, 
+        folder: "Grunnleggende", 
+        name: "Gange (Flere tall)", 
+        formula: "a * b * c ...", 
+        html: '<input type="text" id="i1" placeholder="Eks: 2, 3, 4, 5">', 
+        calc: () => {
+            // Henter teksten, deler den opp ved komma, og gjør om til en liste med tall
+            let arr = document.getElementById('i1').value.split(',').map(Number).filter(x => !isNaN(x));
+            
+            // Sjekker om brukeren faktisk har skrevet inn noen gyldige tall
+            if (arr.length === 0) {
+                return { res: "Feil: Skriv inn tall", exp: "Husk å skille tallene med komma (,)" };
+            }
+
+            // Ganger sammen alle tallene i listen
+            let produkt = arr.reduce((a, b) => a * b, 1); 
+            
+            return { 
+                res: produkt, 
+                exp: arr.join(" * ") + ` = ${produkt}` 
+            };
+        }
+    },
 
     // ALGEBRA (10)
     { id: 23, folder: "Algebra", name: "Lineær funksjon", formula: "y = ax + b", html: '<input type="number" id="i1" placeholder="x1"><input type="number" id="i2" placeholder="y1"><input type="number" id="i3" placeholder="x2"><input type="number" id="i4" placeholder="y2">', calc: () => {
