@@ -359,13 +359,86 @@ const calculators = [
         let l=parseFloat(document.getElementById('i1').value);
         return { res: `${l*10} dl / ${l*1000} ml` };
     }},
+    { 
+        id: 43, 
+        folder: "Konvertering", 
+        name: "Temperatur", 
+        formula: "°C ↔ °F ↔ K", 
+        html: '<input type="number" id="i1" placeholder="Temperatur"><select id="i2"><option value="C">Fra Celsius (°C)</option><option value="F">Fra Fahrenheit (°F)</option><option value="K">Fra Kelvin (K)</option></select>', 
+        calc: () => {
+            let t = parseFloat(document.getElementById('i1').value);
+            let unit = document.getElementById('i2').value;
+            if (isNaN(t)) return { res: "Feil: Skriv inn temperatur" };
+
+            let c, f, k;
+            // Regner ut alle verdiene uansett hva brukeren valgte som start
+            if (unit === "C") { c = t; f = (t * 9/5) + 32; k = t + 273.15; }
+            else if (unit === "F") { c = (t - 32) * 5/9; f = t; k = c + 273.15; }
+            else if (unit === "K") { c = t - 273.15; f = (c * 9/5) + 32; k = t; }
+
+            // Returnerer de TO andre enhetene basert på hva brukeren valgte
+            if (unit === "C") return { res: `${f.toFixed(1)} °F / ${k.toFixed(1)} K`, exp: `${t}°C er lik:\nFahrenheit: (${t} * 9/5) + 32 = ${f.toFixed(2)}\nKelvin: ${t} + 273.15 = ${k.toFixed(2)}` };
+            if (unit === "F") return { res: `${c.toFixed(1)} °C / ${k.toFixed(1)} K`, exp: `${t}°F er lik:\nCelsius: (${t} - 32) * 5/9 = ${c.toFixed(2)}\nKelvin: ${c.toFixed(2)} + 273.15 = ${k.toFixed(2)}` };
+            if (unit === "K") return { res: `${c.toFixed(1)} °C / ${f.toFixed(1)} °F`, exp: `${t}K er lik:\nCelsius: ${t} - 273.15 = ${c.toFixed(2)}\nFahrenheit: (${c.toFixed(2)} * 9/5) + 32 = ${f.toFixed(2)}` };
+        }
+    },
 
     // DIVERSE (2)
     { id: 29, folder: "Diverse", name: "BMI", formula: "kg / m²", html: '<input type="number" id="i1" placeholder="kg"><input type="number" id="i2" placeholder="meter">', calc: () => {
         let w=parseFloat(document.getElementById('i1').value), h=parseFloat(document.getElementById('i2').value);
         let bmi = w/(h*h); return { res: bmi.toFixed(1), exp: bmi < 18.5 ? "Undervekt" : bmi < 25 ? "Normal" : "Overvekt" };
     }},
-    { id: 20, folder: "Diverse", name: "Om appen", formula: "Versjon 10 Pro", html: `
+    { 
+        id: 45, 
+        folder: "Diverse", 
+        name: "Tilfeldig tall", 
+        formula: "Min ≤ x ≤ Maks", 
+        html: '<input type="number" id="i1" placeholder="Minimum (f.eks. 1)"><input type="number" id="i2" placeholder="Maksimum (f.eks. 100)">', 
+        calc: () => {
+            let min = parseInt(document.getElementById('i1').value);
+            let max = parseInt(document.getElementById('i2').value);
+            
+            if (isNaN(min) || isNaN(max)) return { res: "Feil: Skriv inn to tall" };
+            
+            // Bytter plass på min og max hvis brukeren skrev det største tallet først
+            if (min > max) { 
+                let temp = min; 
+                min = max; 
+                max = temp; 
+            } 
+            
+            // Trekker et tilfeldig heltall
+            let tilfeldig = Math.floor(Math.random() * (max - min + 1)) + min;
+            
+            return { 
+                res: tilfeldig, 
+                exp: `Datamaskinen trakk et tilfeldig heltall mellom ${min} og ${max}.` 
+            };
+        }
+    },
+    { 
+        id: 44, 
+        folder: "Diverse", 
+        name: "Dato-differanse", 
+        formula: "Dato 2 - Dato 1", 
+        html: '<label style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 5px; display:block; text-align:left;">Startdato:</label><input type="date" id="i1"><label style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 5px; display:block; text-align:left;">Sluttdato:</label><input type="date" id="i2">', 
+        calc: () => {
+            let d1 = new Date(document.getElementById('i1').value);
+            let d2 = new Date(document.getElementById('i2').value);
+            
+            if (isNaN(d1) || isNaN(d2)) return { res: "Feil: Velg to datoer" };
+            
+            // Regner ut differansen i millisekunder og gjør det om til dager
+            let diffTid = Math.abs(d2 - d1);
+            let diffDager = Math.ceil(diffTid / (1000 * 60 * 60 * 24));
+            
+            return { 
+                res: `${diffDager} dager`, 
+                exp: `Tid mellom ${d1.toLocaleDateString('no-NO')} og ${d2.toLocaleDateString('no-NO')} er nøyaktig ${diffDager} dager.` 
+            };
+        }
+    },
+    { id: 20, folder: "Diverse", name: "Om appen", formula: "Versjon 11", html: `
         <div style="text-align: left; padding: 10px; color: #ccc; line-height: 1.6;">
             <p style="margin-bottom: 15px;">Dette er et komplett, web-basert matematikkverktøy utviklet av <b style="color: var(--primary);">Leon Aabak</b>.</p>
             <ul style="margin-bottom: 15px; padding-left: 20px;">
@@ -379,7 +452,7 @@ const calculators = [
             </p>
         </div>`, 
         calc: () => ({
-            res: "Leon Aabak V10 Pro", 
+            res: "Leon Aabak V11", 
             exp: "Håper du får god bruk for Total Kalkulator!"
         }) 
     }
