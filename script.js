@@ -253,6 +253,43 @@ const calculators = [
         if(!v) return {res: `v = ${s/t}`}; if(!s) return {res: `s = ${v*t}`}; return {res: `t = ${s/v}`};
     }},
 
+    // NY FYSIKK-FUNKSJON: Kinetisk Energi
+    { 
+        id: 39, // 
+        folder: "Fysikk", 
+        name: "Kinetisk Energi", 
+        formula: "E = ½mv²", 
+        html: '<input type="number" id="i1" placeholder="Masse (kg)"><input type="number" id="i2" placeholder="Fart (m/s)">', 
+        calc: () => {
+            let m = parseFloat(document.getElementById('i1').value);
+            let v = parseFloat(document.getElementById('i2').value);
+            let e = 0.5 * m * Math.pow(v, 2);
+            return { 
+                res: `${e.toFixed(2)} Joule`, 
+                exp: `½ * ${m} * ${v}² = ${e.toFixed(2)} J`,
+                graph: (x) => 0.5 * m * Math.pow(x, 2) // Viser hvordan energien øker med farten (x)
+            };
+        }
+    },
+
+    // NY GEOMETRI-FUNKSJON: Volum Sylinder
+    { 
+        id: 40, 
+        folder: "Geometri", 
+        name: "Volum Sylinder", 
+        formula: "V = πr²h", 
+        html: '<input type="number" id="i1" placeholder="Radius (r)"><input type="number" id="i2" placeholder="Høyde (h)">', 
+        calc: () => {
+            let r = parseFloat(document.getElementById('i1').value);
+            let h = parseFloat(document.getElementById('i2').value);
+            let v = Math.PI * Math.pow(r, 2) * h;
+            return { 
+                res: `${v.toFixed(2)}`, 
+                exp: `π * ${r}² * ${h} = ${v.toFixed(2)}` 
+            };
+        }
+    },
+
     // ØKONOMI (3)
     { id: 26, folder: "Økonomi", name: "Rentes rente", formula: "K * v^t", html: '<input type="number" id="i1" placeholder="Kapital"><input type="number" id="i2" placeholder="Vekstf. (f.eks 1.05)"><input type="number" id="i3" placeholder="År">', calc: () => {
         let k=parseFloat(document.getElementById('i1').value), v=parseFloat(document.getElementById('i2').value), t=parseFloat(document.getElementById('i3').value);
