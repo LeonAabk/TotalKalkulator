@@ -945,6 +945,87 @@ document.getElementById('btn-back-list').onclick = () => {
     document.getElementById('enhetssirkel-panel').style.display = 'block';
     historyPanel.style.display = 'block';
 };
+// =========================================
+// PROSJEKTILBANE LOGIKK (SIDE-PANEL)
+// =========================================
+
+const canvasKast = document.getElementById('prosjektilCanvas');
+const ctxKast = canvasKast ? canvasKast.getContext('2d') : null;
+const fartInput = document.getElementById('fartInput');
+const kastvinkelInput = document.getElementById('kastvinkelInput');
+
+function tegnKastbane() {
+    if (!ctxKast) return;
+    
+    let v0 = parseFloat(fartInput.value) || 0;
+    let vinkelGrader = parseFloat(kastvinkelInput.value) || 0;
+    
+    // Konverterer til radianer
+    let radianer = vinkelGrader * (Math.PI / 180);
+    let g = 9.81; // Tyngdeakselerasjon
+
+    // Regner ut maksimal lengde og høyde (Fysikk-formler)
+    let maxLengde = (Math.pow(v0, 2) * Math.sin(2 * radianer)) / g;
+    let maxHoyde = (Math.pow(v0 * Math.sin(radianer), 2)) / (2 * g);
+
+    // Oppdaterer teksten under grafen
+    document.getElementById('kastLengde').innerText = maxLengde.toFixed(1) + " m";
+    document.getElementById('kastHoyde').innerText = maxHoyde.toFixed(1) + " m";
+
+    const w = canvasKast.width;
+    const h = canvasKast.height;
+    ctxKast.clearRect(0, 0, w, h);
+
+    // Tegner et rutenett/bakken
+    ctxKast.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctxKast.lineWidth = 1;
+    ctxKast.beginPath();
+    ctxKast.moveTo(0, h - 10);
+    ctxKast.lineTo(w, h - 10);
+    ctxKast.stroke();
+
+    // Sjekker om det er et gyldig kast før vi tegner
+    if (v0 <= 0 || vinkelGrader <= 0 || vinkelGrader >= 180) return;
+
+    // Finner en skala slik at kastet alltid passer inni canvas-vinduet
+    let skalaX = (w - 20) / maxLengde;
+    let skalaY = (h - 20) / maxHoyde;
+    let grafSkala = Math.min(skalaX, skalaY); // Beholder proporsjonene
+
+    const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#00d2ff';
+    ctxKast.strokeStyle = primaryColor;
+    ctxKast.lineWidth = 2;
+    ctxKast.beginPath();
+
+    // Tegner selve parabelen
+    let forrigeX = 0;
+    let forrigeY = h - 10;
+    ctxKast.moveTo(forrigeX, forrigeY);
+
+    for (let t = 0; t <= 10; t += 0.1) {
+        // x = v0 * cos(vinkel) * t
+        let xVerdi = v0 * Math.cos(radianer) * t;
+        // y = v0 * sin(vinkel) * t - 0.5 * g * t^2
+        let yVerdi = (v0 * Math.sin(radianer) * t) - (0.5 * g * t * t);
+
+        if (yVerdi < 0) break; // Stopper grafen når den treffer bakken
+
+        let tegnX = 10 + (xVerdi * grafSkala);
+        let tegnY = (h - 10) - (yVerdi * grafSkala);
+        
+        ctxKast.lineTo(tegnX, tegnY);
+    }
+    ctxKast.stroke();
+}
+
+// Lytter etter endringer slik at grafen oppdaterer seg live
+if (fartInput && kastvinkelInput) {
+    fartInput.addEventListener('input', tegnKastbane);
+    kastvinkelInput.addEventListener('input', tegnKastbane);
+    
+    // Tegner grafen første gang siden lastes
+    tegnKastbane();
+}
 
 // Start appen
 renderFolders();
