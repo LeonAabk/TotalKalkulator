@@ -78,6 +78,18 @@
                         </div>
                     </div>
                 </div>
+                <div id="prosjektil-panel" class="glass-panel verktoy-boks">
+                    <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">🚀 Kastbane</h3>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="number" id="fartInput" placeholder="Fart (m/s)" value="15" style="width: 50%; font-size: 0.9rem; padding: 8px;">
+                        <input type="number" id="kastvinkelInput" placeholder="Vinkel (°)" value="45" style="width: 50%; font-size: 0.9rem; padding: 8px;">
+                    </div>
+                    <canvas id="prosjektilCanvas" width="250" height="150" style="background: rgba(255,255,255,0.05); border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1);"></canvas>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #ccc; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
+                        <span>Lengde: <b id="kastLengde" style="color: var(--primary);">0 m</b></span>
+                        <span>Høyde: <b id="kastHoyde" style="color: var(--primary);">0 m</b></span>
+                    </div>
+                </div>
 
                 <section id="history-panel" class="glass-panel verktoy-boks" style="padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
