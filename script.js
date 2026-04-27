@@ -131,7 +131,7 @@ const calculators = [
         let x = -b/(2*a);
         return { res: `x = ${x.toFixed(2)}`, exp: `Symmetrilinje (der f'(x)=0):\nx = -b / 2a = -${b} / (2*${a})` };
     }},
-{ id: 48, folder: "Algebra", name: "Faktorisering (Andregrad)", formula: "ax² + bx + c", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', calc: () => {
+    { id: 48, folder: "Algebra", name: "Faktorisering (Andregrad)", formula: "ax² + bx + c", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', calc: () => {
         let a = parseFloat(document.getElementById('i1').value);
         let b = parseFloat(document.getElementById('i2').value);
         let c = parseFloat(document.getElementById('i3').value);
@@ -225,6 +225,7 @@ const calculators = [
             graph: (x) => a*x*x*x + b*x*x + c*x + d
         };
     }},
+
 
     // GEOMETRI (8)
     { id: 5, folder: "Geometri", name: "Pytagoras", formula: "a² + b² = c²", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b">', calc: () => {
