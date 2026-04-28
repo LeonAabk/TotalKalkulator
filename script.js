@@ -1423,4 +1423,4 @@ if (fartInput && kastvinkelInput) {
 renderFolders();
 oppdaterSirkel();
 tegnHurtigGraf();
-
+ 
