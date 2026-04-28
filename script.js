@@ -263,6 +263,98 @@ const calculators = [
             };
         }
     },
+    // ALGEBRA: Likningssett (To ukjente)
+    { 
+        id: 56, 
+        folder: "Algebra", 
+        name: "To Ukjente (Likningssett)", 
+        formula: "Løs x og y", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Likning 1: a₁x + b₁y = c₁</p>
+            <div style="display:flex;gap:5px;">
+                <input type="number" id="l1a" placeholder="a₁">
+                <input type="number" id="l1b" placeholder="b₁">
+                <input type="number" id="l1c" placeholder="c₁">
+            </div>
+            <p style="font-size: 0.9rem; color: #ccc; margin-top: 10px; margin-bottom: 5px;">Likning 2: a₂x + b₂y = c₂</p>
+            <div style="display:flex;gap:5px;">
+                <input type="number" id="l2a" placeholder="a₂">
+                <input type="number" id="l2b" placeholder="b₂">
+                <input type="number" id="l2c" placeholder="c₂">
+            </div>
+        `, 
+        calc: () => {
+            let a1 = parseFloat(document.getElementById('l1a').value);
+            let b1 = parseFloat(document.getElementById('l1b').value);
+            let c1 = parseFloat(document.getElementById('l1c').value);
+            let a2 = parseFloat(document.getElementById('l2a').value);
+            let b2 = parseFloat(document.getElementById('l2b').value);
+            let c2 = parseFloat(document.getElementById('l2c').value);
+
+            if (isNaN(a1) || isNaN(b1) || isNaN(c1) || isNaN(a2) || isNaN(b2) || isNaN(c2)) {
+                return { res: "Feil: Fyll inn alle 6 felt" };
+            }
+
+            // Bruker Cramers regel (Determinanter) for å løse settet
+            let D = a1 * b2 - a2 * b1;
+            let Dx = c1 * b2 - c2 * b1;
+            let Dy = a1 * c2 - a2 * c1;
+
+            if (D === 0) {
+                if (Dx === 0 && Dy === 0) return { res: "Uendelig antall løsninger", exp: "Linjene ligger nøyaktig oppå hverandre." };
+                return { res: "Ingen løsning", exp: "Linjene er parallelle og krysser aldri hverandre." };
+            }
+
+            let x = Dx / D;
+            let y = Dy / D;
+
+            return {
+                res: `x = ${x.toFixed(2)}, y = ${y.toFixed(2)}`,
+                exp: `Bruker Cramers regel:\nD = (${a1} * ${b2}) - (${a2} * ${b1}) = ${D}\nDx = (${c1} * ${b2}) - (${c2} * ${b1}) = ${Dx}\nDy = (${a1} * ${c2}) - (${a2} * ${c1}) = ${Dy}\n\nx = Dx / D = ${x.toFixed(2)}\ny = Dy / D = ${y.toFixed(2)}`
+            };
+        }
+    },
+    // ALGEBRA: Fullstendig Kvadrat
+    { 
+        id: 57, 
+        folder: "Algebra", 
+        name: "Fullstendig Kvadrat", 
+        formula: "a(x + h)² + k", 
+        html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', 
+        calc: () => {
+            let a = parseFloat(document.getElementById('i1').value);
+            let b = parseFloat(document.getElementById('i2').value);
+            let c = parseFloat(document.getElementById('i3').value);
+
+            if (isNaN(a) || isNaN(b) || isNaN(c)) return { res: "Feil: Fyll inn a, b og c" };
+            if (a === 0) return { res: "Feil: a kan ikke være 0", exp: "Dette er en lineær ligning, ikke en andregradsligning." };
+
+            // Regner ut h og k for a(x + h)^2 + k
+            let h = b / (2 * a);
+            let k = c - (a * Math.pow(h, 2));
+
+            // Formaterer teksten slik at den ser ut som ekte matte (unngår "x + -2")
+            let hStr = h === 0 ? "x" : (h > 0 ? `(x + ${h.toFixed(2)})` : `(x - ${Math.abs(h).toFixed(2)})`);
+            let aStr = a === 1 ? "" : (a === -1 ? "-" : a.toString());
+            let kStr = k === 0 ? "" : (k > 0 ? ` + ${k.toFixed(2)}` : ` - ${Math.abs(k).toFixed(2)}`);
+
+            let resStr = `${aStr}${h === 0 ? "x²" : hStr + "²"}${kStr}`;
+            
+            // Fjerner ".00" for å holde det ryddig hvis det er hele tall
+            resStr = resStr.replace(/\.00/g, ""); 
+
+            let expStr = `Start: ${a}x² ${b>=0?'+':''} ${b}x ${c>=0?'+':''} ${c}\n\n`;
+            expStr += `1. Finner 'h' ved b / 2a:\n   h = ${b} / (2 * ${a}) = ${h}\n\n`;
+            expStr += `2. Finner 'k' ved c - ah²:\n   k = ${c} - (${a} * ${h}²) = ${k}\n\n`;
+            expStr += `Satt inn i a(x + h)² + k:\nResultat: ${resStr}`;
+
+            return {
+                res: resStr,
+                exp: expStr,
+                graph: (x) => a * x * x + b * x + c
+            };
+        }
+    },
 
 
     // GEOMETRI (8)
@@ -478,6 +570,46 @@ const calculators = [
         let arr = document.getElementById('i1').value.split(',').map(Number).filter(x => !isNaN(x));
         let sum = arr.reduce((a,b)=>a+b,0); return { res: sum/arr.length, exp: `Sum: ${sum}, Antall: ${arr.length}` };
     }},
+    { 
+        id: 55, 
+        folder: "Statistikk", 
+        name: "Lineær Regresjon", 
+        formula: "Beste tilpasning: y = ax + b", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Skriv inn verdier separert med komma:</p>
+            <input type="text" id="i1" placeholder="x-verdier (f.eks: 1, 2, 3)">
+            <input type="text" id="i2" placeholder="y-verdier (f.eks: 2.1, 4.0, 6.2)">
+        `, 
+        calc: () => {
+            let xArr = document.getElementById('i1').value.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+            let yArr = document.getElementById('i2').value.split(',').map(y => parseFloat(y.trim())).filter(y => !isNaN(y));
+
+            if (xArr.length === 0 || yArr.length === 0 || xArr.length !== yArr.length) {
+                return { res: "Feil: Ugyldig data", exp: "Du må ha like mange x-verdier som y-verdier, og de må skilles med komma." };
+            }
+
+            let n = xArr.length;
+            let sumX = xArr.reduce((a, b) => a + b, 0);
+            let sumY = yArr.reduce((a, b) => a + b, 0);
+            let sumXY = xArr.reduce((sum, x, i) => sum + (x * yArr[i]), 0);
+            let sumX2 = xArr.reduce((sum, x) => sum + (x * x), 0);
+
+            let nevner = (n * sumX2) - (sumX * sumX);
+            if (nevner === 0) return { res: "Feil: Vertikal linje", exp: "Alle x-verdiene er like. Regresjon krever spredning i x." };
+
+            let a = ((n * sumXY) - (sumX * sumY)) / nevner;
+            let b = (sumY - (a * sumX)) / n;
+
+            let aStr = a.toFixed(3);
+            let bStr = b >= 0 ? `+ ${b.toFixed(3)}` : `- ${Math.abs(b).toFixed(3)}`;
+
+            return {
+                res: `y = ${aStr}x ${bStr}`,
+                exp: `Beregnet med minste kvadraters metode basert på ${n} punkter.\n\nStigningstall (a) ≈ ${aStr}\nSkjæringspunkt (b) ≈ ${b.toFixed(3)}`,
+                graph: (x) => a * x + b
+            };
+        }
+    },
 
     // FYSIKK (3)
     { id: 18, folder: "Fysikk", name: "Bølge", formula: "v = f * λ", html: '<input type="number" id="i1" placeholder="f (Hz)"><input type="number" id="i2" placeholder="λ (m)">', calc: () => {
