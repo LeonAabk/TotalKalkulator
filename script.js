@@ -88,13 +88,50 @@ const calculators = [
         let a = (y2-y1)/(x2-x1), b = y1-(a*x1);
         return { res: `y = ${a}x ${b>=0?'+':''} ${b}`, exp: `a = (${y2}-${y1})/(${x2}-${x1}) = ${a}\nb = ${y1}-(${a}*${x1}) = ${b}`, graph: (x) => a*x+b };
     }},
-    { id: 11, folder: "Algebra", name: "Andregrad (ABC)", formula: "ax² + bx + c = 0", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', calc: () => {
-        let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), c=parseFloat(document.getElementById('i3').value);
-        let d = (b*b)-(4*a*c);
-        if(d<0) return {res: "Ingen reell løsning", graph: (x) => a*x*x+b*x+c};
-        let x1 = (-b+Math.sqrt(d))/(2*a), x2 = (-b-Math.sqrt(d))/(2*a);
-        return { res: `x1: ${x1.toFixed(2)}, x2: ${x2.toFixed(2)}`, exp: `Diskriminant: ${d}\nx = (-${b} ± √${d}) / ${2*a}`, graph: (x) => a*x*x+b*x+c };
-    }},
+    // ALGEBRA: ABC-formelen (Andregradsligning)
+    { 
+        id: 11, 
+        folder: "Algebra", 
+        name: "ABC-formelen", 
+        formula: "x = (-b ± √(b² - 4ac)) / 2a", 
+        html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', 
+        calc: () => {
+            let a = parseFloat(document.getElementById('i1').value);
+            let b = parseFloat(document.getElementById('i2').value);
+            let c = parseFloat(document.getElementById('i3').value);
+
+            if (isNaN(a) || isNaN(b) || isNaN(c)) return { res: "Feil: Fyll inn a, b og c" };
+            if (a === 0) return { res: "Feil: a kan ikke være 0", exp: "Hvis a er 0, er det ikke en andregradsligning." };
+
+            let d = (b * b) - (4 * a * c);
+            let bStr = b < 0 ? `(${b})` : b; // Setter parentes rundt negative tall for ryddigere formel
+            
+            let expStr = `Formel: x = (-b ± √(b² - 4ac)) / 2a\n\n`;
+            expStr += `1. Setter inn tallene:\n   x = (-${bStr} ± √(${bStr}² - 4 * ${a} * ${c})) / (2 * ${a})\n\n`;
+            expStr += `2. Regner ut det under roten:\n   d = ${b * b} - (${4 * a * c}) = ${d}\n\n`;
+
+            if (d < 0) {
+                expStr += `Siden resultatet under roten (${d}) er mindre enn 0, har ligningen ingen reelle løsninger. Grafen krysser aldri x-aksen.`;
+                return { res: "Ingen reell løsning", exp: expStr, graph: (x) => a * x * x + b * x + c };
+            }
+
+            let sqrtD = Math.sqrt(d);
+            expStr += `3. Finner kvadratroten av ${d}:\n   √${d} = ${sqrtD.toFixed(2)}\n\n`;
+            expStr += `4. Deler opp i pluss og minus for å finne x₁ og x₂:\n`;
+            
+            let x1 = (-b + sqrtD) / (2 * a);
+            let x2 = (-b - sqrtD) / (2 * a);
+
+            expStr += `   x₁ = (${-b} + ${sqrtD.toFixed(2)}) / ${2 * a} = ${x1.toFixed(2)}\n`;
+            expStr += `   x₂ = (${-b} - ${sqrtD.toFixed(2)}) / ${2 * a} = ${x2.toFixed(2)}`;
+
+            return { 
+                res: d === 0 ? `x = ${x1.toFixed(2)} (Dobbeltrot)` : `x₁ = ${x1.toFixed(2)}, x₂ = ${x2.toFixed(2)}`, 
+                exp: expStr, 
+                graph: (x) => a * x * x + b * x + c 
+            };
+        }
+    },
     { id: 13, folder: "Algebra", name: "Topp/Bunnpunkt", formula: "x = -b / 2a", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', calc: () => {
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), c=parseFloat(document.getElementById('i3').value);
         let x = -b/(2*a), y = a*x*x+b*x+c;
