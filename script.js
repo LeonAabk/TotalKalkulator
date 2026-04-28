@@ -225,6 +225,44 @@ const calculators = [
             graph: (x) => a*x*x*x + b*x*x + c*x + d
         };
     }},
+    { 
+        id: 52, 
+        folder: "Algebra", 
+        name: "Proporsjonalitet", 
+        formula: "y = kx  (k = y/x)", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Finn konstanten (k):</p>
+            <input type="number" id="i1" placeholder="x (f.eks. antall)">
+            <input type="number" id="i2" placeholder="y (f.eks. pris)">
+            <p style="font-size: 0.9rem; color: #ccc; margin-top: 10px; margin-bottom: 5px;">Regn ut ny verdi (Valgfritt):</p>
+            <input type="number" id="i3" placeholder="Ny x-verdi">`, 
+        calc: () => {
+            let x1 = parseFloat(document.getElementById('i1').value);
+            let y1 = parseFloat(document.getElementById('i2').value);
+            let x2 = parseFloat(document.getElementById('i3').value);
+
+            if (isNaN(x1) || isNaN(y1)) return { res: "Feil: Fyll inn x og y" };
+            if (x1 === 0) return { res: "Feil: x kan ikke være 0" };
+
+            let k = y1 / x1;
+            let exp = `Konstant (k) = ${y1} / ${x1} = ${k.toFixed(2)}\nFormel: y = ${k.toFixed(2)}x`;
+
+            if (!isNaN(x2)) {
+                let y2 = k * x2;
+                return {
+                    res: `y = ${y2.toFixed(2)} (k = ${k.toFixed(2)})`,
+                    exp: `${exp}\n\nNår x er ${x2}, blir y:\n${k.toFixed(2)} * ${x2} = ${y2.toFixed(2)}`,
+                    graph: (x) => k * x
+                };
+            }
+
+            return {
+                res: `Konstant k = ${k.toFixed(2)}`,
+                exp: exp,
+                graph: (x) => k * x
+            };
+        }
+    },
 
 
     // GEOMETRI (8)
@@ -338,6 +376,86 @@ const calculators = [
                 res: "Trekant Løst!", 
                 exp: `Areal: ${areal.toFixed(2)}\n\nSider:\na = ${a.toFixed(2)}\nb = ${b.toFixed(2)}\nc = ${c.toFixed(2)}\n\nVinkler:\n∠A = ${A.toFixed(2)}°\n∠B = ${B.toFixed(2)}°\n∠C = ${C.toFixed(2)}°` 
             };
+        }
+    },
+    { 
+        id: 53, 
+        folder: "Geometri", 
+        name: "Formlikhet", 
+        formula: "a / A = b / B", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Figur 1 (Kjente sider):</p>
+            <input type="number" id="i1" placeholder="Side a">
+            <input type="number" id="i2" placeholder="Side b">
+            <p style="font-size: 0.9rem; color: #ccc; margin-top: 10px; margin-bottom: 5px;">Figur 2 (Tilsvarende side):</p>
+            <input type="number" id="i3" placeholder="Side A (tilsvarer a)">`, 
+        calc: () => {
+            let a = parseFloat(document.getElementById('i1').value);
+            let b = parseFloat(document.getElementById('i2').value);
+            let A = parseFloat(document.getElementById('i3').value);
+
+            if (isNaN(a) || isNaN(b) || isNaN(A)) return { res: "Feil: Fyll inn alle 3 felt" };
+            if (a === 0) return { res: "Feil: Kan ikke dele på 0" };
+
+            let k = A / a; // Forholdstall / Skalafaktor
+            let B = b * k;
+
+            return {
+                res: `Ukjent side (B) = ${B.toFixed(2)}`,
+                exp: `1. Finner forholdstallet (skalafaktoren):\n   A / a = ${A} / ${a} = ${k.toFixed(2)}\n\n2. Ganger Side b med forholdstallet:\n   B = ${b} * ${k.toFixed(2)} = ${B.toFixed(2)}`
+            };
+        }
+    },
+    { 
+        id: 54, 
+        folder: "Geometri", 
+        name: "Kongruens-sjekk (Trekant)", 
+        formula: "Er de identiske?", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Trekant 1 (Tre sider):</p>
+            <div style="display:flex;gap:5px;">
+                <input type="number" id="t1a" placeholder="s1">
+                <input type="number" id="t1b" placeholder="s2">
+                <input type="number" id="t1c" placeholder="s3">
+            </div>
+            <p style="font-size: 0.9rem; color: #ccc; margin-top: 10px; margin-bottom: 5px;">Trekant 2 (Tre sider):</p>
+            <div style="display:flex;gap:5px;">
+                <input type="number" id="t2a" placeholder="s1">
+                <input type="number" id="t2b" placeholder="s2">
+                <input type="number" id="t2c" placeholder="s3">
+            </div>`, 
+        calc: () => {
+            let t1 = [parseFloat(document.getElementById('t1a').value), parseFloat(document.getElementById('t1b').value), parseFloat(document.getElementById('t1c').value)];
+            let t2 = [parseFloat(document.getElementById('t2a').value), parseFloat(document.getElementById('t2b').value), parseFloat(document.getElementById('t2c').value)];
+
+            if (t1.some(isNaN) || t2.some(isNaN)) return { res: "Feil: Fyll inn alle 6 sider" };
+
+            // Sorterer lengdene fra kortest til lengst for å kunne sammenligne dem riktig
+            t1.sort((x, y) => x - y);
+            t2.sort((x, y) => x - y);
+
+            // Trekantulikheten (Summen av de to korteste må være lengre enn den lengste)
+            let valid1 = (t1[0] + t1[1] > t1[2]);
+            let valid2 = (t2[0] + t2[1] > t2[2]);
+
+            if (!valid1 || !valid2) {
+                return { res: "Ugyldige trekanter", exp: "Matematisk umulig! Summen av de to korteste sidene må alltid være større enn den lengste siden for å kunne lukke en trekant." };
+            }
+
+            // Sjekker SSS (Side-Side-Side)
+            let isCongruent = (t1[0] === t2[0] && t1[1] === t2[1] && t1[2] === t2[2]);
+
+            if (isCongruent) {
+                return {
+                    res: "✅ De er kongruente!",
+                    exp: `Trekant 1: ${t1.join(", ")}\nTrekant 2: ${t2.join(", ")}\n\nBegge trekantene har nøyaktig samme sidelengder. Ifølge SSS-postulatet (Side-Side-Side) er de matematiske kopier av hverandre.`
+                };
+            } else {
+                return {
+                    res: "❌ Ikke kongruente",
+                    exp: `Trekant 1: ${t1.join(", ")}\nTrekant 2: ${t2.join(", ")}\n\nSidene er ikke identiske. Trekantene har dermed forskjellig form eller størrelse.`
+                };
+            }
         }
     },
 
