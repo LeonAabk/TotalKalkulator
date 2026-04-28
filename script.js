@@ -355,6 +355,58 @@ const calculators = [
             };
         }
     },
+    // ALGEBRA: Tangentens ligning (Ettpunktsformelen)
+    { 
+        id: 59, 
+        folder: "Algebra", 
+        name: "Tangentens Ligning", 
+        formula: "y - y₁ = f'(x₁)(x - x₁)", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Funksjon: f(x) = ax² + bx + c</p>
+            <div style="display:flex;gap:5px;">
+                <input type="number" id="i1" placeholder="a">
+                <input type="number" id="i2" placeholder="b">
+                <input type="number" id="i3" placeholder="c">
+            </div>
+            <p style="font-size: 0.9rem; color: #ccc; margin-top: 10px; margin-bottom: 5px;">Hvor skal tangenten treffe?</p>
+            <input type="number" id="i4" placeholder="x-verdi">
+        `, 
+        calc: () => {
+            let a = parseFloat(document.getElementById('i1').value) || 0;
+            let b = parseFloat(document.getElementById('i2').value) || 0;
+            let c = parseFloat(document.getElementById('i3').value) || 0;
+            let x1 = parseFloat(document.getElementById('i4').value);
+
+            if (isNaN(x1)) return { res: "Feil: Mangler x-verdi" };
+            if (a === 0 && b === 0 && c === 0) return { res: "Feil: Fyll inn funksjonen" };
+
+            // 1. Finner y-koordinatet: f(x1)
+            let y1 = a * x1 * x1 + b * x1 + c;
+            
+            // 2. Finner stigningstallet: f'(x1) = 2ax + b
+            let stigning = 2 * a * x1 + b;
+
+            // 3. Setter inn i ettpunktsformelen: y = a(x - x1) + y1
+            let konstant = y1 - (stigning * x1);
+
+            let stigningStr = stigning === 1 ? "" : (stigning === -1 ? "-" : stigning.toFixed(2));
+            let konstantStr = konstant === 0 ? "" : (konstant > 0 ? ` + ${konstant.toFixed(2)}` : ` - ${Math.abs(konstant).toFixed(2)}`);
+            let resStr = stigning === 0 ? `y = ${konstant.toFixed(2)}` : `y = ${stigningStr}x${konstantStr}`;
+            
+            // Fjerner unødvendige .00
+            resStr = resStr.replace(/\.00/g, "");
+
+            let exp = `1. Finner treffpunktet (x₁, y₁):\n   y₁ = f(${x1}) = ${a}(${x1})² + ${b}(${x1}) + ${c} = ${y1}\n   Punkt: (${x1}, ${y1})\n\n`;
+            exp += `2. Finner stigningstallet f'(x₁):\n   f'(x) = ${2*a}x + ${b}\n   f'(${x1}) = ${2*a}(${x1}) + ${b} = ${stigning}\n\n`;
+            exp += `3. Ettpunktsformelen:\n   y - ${y1} = ${stigning}(x - ${x1})\n   y = ${stigning}x - ${stigning * x1} + ${y1}\n   Resultat: ${resStr}`;
+
+            return {
+                res: resStr,
+                exp: exp,
+                graph: (x) => stigning * x + konstant
+            };
+        }
+    },
 
 
     // GEOMETRI (8)
@@ -560,6 +612,59 @@ const calculators = [
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value);
         return { res: a/b, exp: `${a} / ${b} = ${a/b}` };
     }},
+    // MATTE: Derivasjon av Polynom (opp til 3. grad)
+    { 
+        id: 58, 
+        folder: "Matte", 
+        name: "Derivasjon (Polynom)", 
+        formula: "f(x) = ax³ + bx² + cx + d", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 10px;">Fyll inn tallene for funksjonen din. La felter du ikke har stå tomme.</p>
+            <input type="number" id="i1" placeholder="a (foran x³)">
+            <input type="number" id="i2" placeholder="b (foran x²)">
+            <input type="number" id="i3" placeholder="c (foran x)">
+            <input type="number" id="i4" placeholder="d (konstant)">
+        `, 
+        calc: () => {
+            let a = parseFloat(document.getElementById('i1').value) || 0;
+            let b = parseFloat(document.getElementById('i2').value) || 0;
+            let c = parseFloat(document.getElementById('i3').value) || 0;
+            let d = parseFloat(document.getElementById('i4').value) || 0;
+
+            if (a === 0 && b === 0 && c === 0 && d === 0) return { res: "Feil: Fyll inn minst ett tall" };
+
+            // Regner ut derivert: 3ax^2 + 2bx + c
+            let dA = 3 * a;
+            let dB = 2 * b;
+            let dC = c;
+
+            // Hjelpefunksjon for å bygge en pen tekst-streng av funksjonen
+            let formatTerm = (coef, varStr, isFirst) => {
+                if (coef === 0) return "";
+                let sign = coef > 0 ? (isFirst ? "" : " + ") : (isFirst ? "-" : " - ");
+                let val = Math.abs(coef) === 1 && varStr !== "" ? "" : Math.abs(coef);
+                return `${sign}${val}${varStr}`;
+            };
+
+            let opprinnelig = formatTerm(a, "x³", true) + formatTerm(b, "x²", a === 0) + formatTerm(c, "x", a === 0 && b === 0) + formatTerm(d, "", a === 0 && b === 0 && c === 0);
+            
+            let resStr = formatTerm(dA, "x²", true) + formatTerm(dB, "x", dA === 0) + formatTerm(dC, "", dA === 0 && dB === 0);
+            if (resStr === "") resStr = "0";
+
+            let expStr = `Opprinnelig funksjon:\nf(x) = ${opprinnelig}\n\n`;
+            expStr += `Bruker potensregelen:\n`;
+            if (a !== 0) expStr += `• ${a}x³  ->  3 * ${a}x² = ${dA}x²\n`;
+            if (b !== 0) expStr += `• ${b}x²  ->  2 * ${b}x = ${dB}x\n`;
+            if (c !== 0) expStr += `• ${c}x  ->  ${c}\n`;
+            if (d !== 0) expStr += `• ${d}  ->  0 (Konstanter forsvinner)\n`;
+
+            return {
+                res: `f'(x) = ${resStr}`,
+                exp: expStr.trim(),
+                graph: (x) => dA*x*x + dB*x + dC
+            };
+        }
+    },
 
     // STATISTIKK (2)
     { id: 6, folder: "Statistikk", name: "Sannsynlighet", formula: "g / m", html: '<input type="number" id="i1" placeholder="Gunstige"><input type="number" id="i2" placeholder="Mulige">', calc: () => {
