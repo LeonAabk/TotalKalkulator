@@ -460,6 +460,91 @@ const calculators = [
         let r=parseFloat(document.getElementById('i1').value);
         return { res: ((4/3)*Math.PI*Math.pow(r,3)).toFixed(2), exp: `(4/3)*π*${r}³ = ${((4/3)*Math.PI*Math.pow(r,3)).toFixed(2)}` };
     }},
+    // GEOMETRI: Areal av Trapes
+    { 
+        id: 62, 
+        folder: "Geometri", 
+        name: "Areal Trapes", 
+        formula: "A = ((a + b) / 2) * h", 
+        html: '<input type="number" id="i1" placeholder="Side a"><input type="number" id="i2" placeholder="Side b"><input type="number" id="i3" placeholder="Høyde (h)">', 
+        calc: () => {
+            let a = parseFloat(document.getElementById('i1').value);
+            let b = parseFloat(document.getElementById('i2').value);
+            let h = parseFloat(document.getElementById('i3').value);
+            if (isNaN(a) || isNaN(b) || isNaN(h)) return { res: "Feil: Fyll inn alle mål" };
+            let areal = ((a + b) / 2) * h;
+            return { res: areal.toFixed(2), exp: `(( ${a} + ${b} ) / 2) * ${h} = ${areal.toFixed(2)}` };
+        }
+    },
+
+    // GEOMETRI: Volum av Pyramide (Kvadratisk grunnflate)
+    { 
+        id: 63, 
+        folder: "Geometri", 
+        name: "Volum Pyramide", 
+        formula: "V = (s² * h) / 3", 
+        html: '<input type="number" id="i1" placeholder="Sidekant grunnflate (s)"><input type="number" id="i2" placeholder="Høyde (h)">', 
+        calc: () => {
+            let s = parseFloat(document.getElementById('i1').value);
+            let h = parseFloat(document.getElementById('i2').value);
+            if (isNaN(s) || isNaN(h)) return { res: "Feil: Fyll inn s og h" };
+            let volum = (Math.pow(s, 2) * h) / 3;
+            return { res: volum.toFixed(2), exp: `(${s}² * ${h}) / 3 = ${volum.toFixed(2)}` };
+        }
+    },
+
+    // GEOMETRI: Volum av Kjegle
+    { 
+        id: 64, 
+        folder: "Geometri", 
+        name: "Volum Kjegle", 
+        formula: "V = (π * r² * h) / 3", 
+        html: '<input type="number" id="i1" placeholder="Radius (r)"><input type="number" id="i2" placeholder="Høyde (h)">', 
+        calc: () => {
+            let r = parseFloat(document.getElementById('i1').value);
+            let h = parseFloat(document.getElementById('i2').value);
+            if (isNaN(r) || isNaN(h)) return { res: "Feil: Fyll inn r og h" };
+            let volum = (Math.PI * Math.pow(r, 2) * h) / 3;
+            return { res: volum.toFixed(2), exp: "(π * " + r + "² * " + h + ") / 3 = " + volum.toFixed(2) };
+        }
+    },
+
+    // GEOMETRI: Overflateareal av Sylinder
+    { 
+        id: 65, 
+        folder: "Geometri", 
+        name: "Overflate Sylinder", 
+        formula: "A = 2πr² + 2πrh", 
+        html: '<input type="number" id="i1" placeholder="Radius (r)"><input type="number" id="i2" placeholder="Høyde (h)">', 
+        calc: () => {
+            let r = parseFloat(document.getElementById('i1').value);
+            let h = parseFloat(document.getElementById('i2').value);
+            if (isNaN(r) || isNaN(h)) return { res: "Feil: Fyll inn r og h" };
+            let grunnflater = 2 * Math.PI * Math.pow(r, 2);
+            let krumflate = 2 * Math.PI * r * h;
+            let totalt = grunnflater + krumflate;
+            return { 
+                res: totalt.toFixed(2), 
+                exp: `Topper: 2 * π * ${r}² = ${grunnflater.toFixed(2)}\nSide: 2 * π * ${r} * ${h} = ${krumflate.toFixed(2)}\nTotalt: ${totalt.toFixed(2)}` 
+            };
+        }
+    },
+
+    // GEOMETRI: Areal av Rombe / Drage
+    { 
+        id: 66, 
+        folder: "Geometri", 
+        name: "Areal Rombe", 
+        formula: "A = (p * q) / 2", 
+        html: '<input type="number" id="i1" placeholder="Diagonal 1 (p)"><input type="number" id="i2" placeholder="Diagonal 2 (q)">', 
+        calc: () => {
+            let p = parseFloat(document.getElementById('i1').value);
+            let q = parseFloat(document.getElementById('i2').value);
+            if (isNaN(p) || isNaN(q)) return { res: "Feil: Fyll inn begge diagonaler" };
+            let areal = (p * q) / 2;
+            return { res: areal.toFixed(2), exp: `(${p} * ${q}) / 2 = ${areal.toFixed(2)}` };
+        }
+    },
     { id: 8, folder: "Geometri", name: "Volum Boks", formula: "l * b * h", html: '<input type="number" id="i1" placeholder="l"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="h">', calc: () => {
         let l=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), h=parseFloat(document.getElementById('i3').value);
         return { res: l*b*h, exp: `${l} * ${b} * ${h} = ${l*b*h}` };
