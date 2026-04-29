@@ -92,6 +92,21 @@
                         <span>Høyde: <b id="kastHoyde" style="color: var(--primary);">0 m</b></span>
                     </div>
                 </div>
+                
+                <div id="statistikk-panel" class="glass-panel verktoy-boks">
+                    <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">📊 Normalfordeling</h3>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="number" id="snittInput" placeholder="Snitt (μ)" value="50" style="width: 50%; font-size: 0.9rem; padding: 8px;">
+                        <input type="number" id="avvikInput" placeholder="Avvik (σ)" value="10" style="width: 50%; font-size: 0.9rem; padding: 8px;">
+                    </div>
+                    <input type="number" id="verdiInput" placeholder="Din verdi (x) - Valgfritt" value="65" style="width: 100%; font-size: 0.9rem; padding: 8px; margin-bottom: 10px;">
+                    
+                    <canvas id="statCanvas" width="250" height="150" style="background: rgba(255,255,255,0.05); border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1);"></canvas>
+                    
+                    <p id="statTekst" style="font-size: 0.85rem; color: #ccc; margin-top: 10px; text-align: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
+                        Fyll inn tall for å se kurven.
+                    </p>
+                </div>
 
                 <section id="history-panel" class="glass-panel verktoy-boks" style="padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
