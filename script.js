@@ -1353,7 +1353,7 @@ if (snittInput && avvikInput && verdiInput) {
     snittInput.addEventListener('input', tegnNormalfordeling);
     avvikInput.addEventListener('input', tegnNormalfordeling);
     verdiInput.addEventListener('input', tegnNormalfordeling);
-},
+}
 
 
 // =========================================
