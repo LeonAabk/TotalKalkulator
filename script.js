@@ -832,6 +832,45 @@ const calculators = [
             return { res: "Feil ved henting", exp: "Sjekk internettforbindelsen din, eller prøv igjen senere." };
         }
     }},
+    // ØKONOMI: Lånekalkulator (Annuitetslån)
+    { 
+        id: 60, 
+        folder: "Økonomi", 
+        name: "Lånekalkulator", 
+        formula: "Månedlig kostnad", 
+        html: `
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">Regn ut hva lånet koster i måneden:</p>
+            <input type="number" id="l_belop" placeholder="Lånebeløp (kr)">
+            <input type="number" id="l_rente" placeholder="Årlig rente (%)">
+            <input type="number" id="l_aar" placeholder="Nedbetalingstid (år)">
+        `, 
+        calc: () => {
+            let belop = parseFloat(document.getElementById('l_belop').value);
+            let renteAar = parseFloat(document.getElementById('l_rente').value);
+            let aar = parseFloat(document.getElementById('l_aar').value);
+
+            if (isNaN(belop) || isNaN(renteAar) || isNaN(aar) || aar === 0) {
+                return { res: "Feil: Fyll inn alle felt" };
+            }
+
+            // Gjøre om årlig rente i prosent til månedlig desimaltall
+            let r = (renteAar / 100) / 12;
+            let n = aar * 12; // Totalt antall måneder
+
+            // Formel for annuitetslån
+            let terminbelop = belop * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+            let totaltBetalt = terminbelop * n;
+            let bareRenter = totaltBetalt - belop;
+
+            // Formaterer tallene pent med mellomrom for tusenskilletegn
+            let formatKr = (tall) => Math.round(tall).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+            return {
+                res: `${formatKr(terminbelop)} kr / mnd`,
+                exp: `Nedbetalingsplan over ${aar} år (${n} måneder):\n\nLånebeløp: ${formatKr(belop)} kr\nTotalt i renter: ${formatKr(bareRenter)} kr\nTotalt å betale tilbake: ${formatKr(totaltBetalt)} kr\n\n(Dette er et annuitetslån, som betyr at du betaler nøyaktig samme sum hver måned helt til lånet er nedbetalt.)`
+            };
+        }
+    },
 
     // KONVERTERING (3)
     { id: 31, folder: "Konvertering", name: "CM til Feet", formula: "cm / 30.48", html: '<input type="number" id="i1" placeholder="Centimeter">', calc: () => {
