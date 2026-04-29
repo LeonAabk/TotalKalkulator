@@ -1238,6 +1238,122 @@ function tegnHurtigGraf() {
     hurtigCtx.stroke();
 }
 hurtigInput.addEventListener('input', tegnHurtigGraf);
+// =========================================
+// STATISTIKK LOGIKK (SIDE-PANEL)
+// =========================================
+
+const canvasStat = document.getElementById('statCanvas');
+const ctxStat = canvasStat ? canvasStat.getContext('2d') : null;
+const snittInput = document.getElementById('snittInput');
+const avvikInput = document.getElementById('avvikInput');
+const verdiInput = document.getElementById('verdiInput');
+
+function tegnNormalfordeling() {
+    if (!ctxStat) return;
+
+    let mu = parseFloat(snittInput.value); // Gjennomsnitt
+    let sigma = parseFloat(avvikInput.value); // Standardavvik
+    let xVal = parseFloat(verdiInput.value); // Testverdi (brukerens verdi)
+
+    if (isNaN(mu) || isNaN(sigma) || sigma <= 0) {
+        document.getElementById('statTekst').innerText = "Fyll inn gyldig snitt og avvik (avvik må være over 0).";
+        return;
+    }
+
+    const w = canvasStat.width;
+    const h = canvasStat.height;
+    ctxStat.clearRect(0, 0, w, h);
+
+    // Setter skalaen slik at vi alltid ser 4 standardavvik i hver retning
+    let minX = mu - 4 * sigma;
+    let maxX = mu + 4 * sigma;
+    let rangeX = maxX - minX;
+
+    // Finner det høyeste punktet på kurven for å skalere Y-aksen perfekt
+    let maxY = 1 / (sigma * Math.sqrt(2 * Math.PI));
+
+    // Hjelpefunksjoner for å gjøre om ekte x/y-verdier til piksler på lerretet
+    let getCx = (x) => ((x - minX) / rangeX) * w;
+    let getCy = (y) => (h - 10) - (y / maxY) * (h - 20); 
+
+    // Tegner bakken / X-aksen
+    ctxStat.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctxStat.lineWidth = 1;
+    ctxStat.beginPath();
+    ctxStat.moveTo(0, h - 10);
+    ctxStat.lineTo(w, h - 10);
+    ctxStat.stroke();
+
+    // Tegner en stiplet linje i midten for gjennomsnittet
+    ctxStat.beginPath();
+    ctxStat.setLineDash([4, 4]);
+    ctxStat.moveTo(getCx(mu), h - 10);
+    ctxStat.lineTo(getCx(mu), getCy(maxY));
+    ctxStat.stroke();
+    ctxStat.setLineDash([]); // Skrur av stiplet linje for resten av tegningen
+
+    // Tegner selve klokkekurven (Gauss-kurven)
+    const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#00d2ff';
+    ctxStat.strokeStyle = primaryColor;
+    ctxStat.lineWidth = 2;
+    ctxStat.beginPath();
+
+    for (let px = 0; px <= w; px++) {
+        let x = minX + (px / w) * rangeX;
+        // Den berømte formelen for normalfordeling:
+        let exponent = -0.5 * Math.pow((x - mu) / sigma, 2);
+        let y = (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+
+        if (px === 0) ctxStat.moveTo(px, getCy(y));
+        else ctxStat.lineTo(px, getCy(y));
+    }
+    ctxStat.stroke();
+
+    // Tegner inn brukerens punkt hvis det er fylt ut
+    if (!isNaN(xVal)) {
+        let zScore = (xVal - mu) / sigma; // Regner ut Z-score (hvor mange avvik unna)
+        let zText = Math.abs(zScore).toFixed(1);
+        
+        let text = "";
+        if (Math.abs(zScore) < 0.1) text = "Verdien din ligger nøyaktig på gjennomsnittet! 🎯";
+        else if (zScore > 0) text = `Ligger ${zText} standardavvik OVER snittet. 📈`;
+        else text = `Ligger ${zText} standardavvik UNDER snittet. 📉`;
+
+        document.getElementById('statTekst').innerText = text;
+
+        let pxX = getCx(xVal);
+        let exponent = -0.5 * Math.pow((xVal - mu) / sigma, 2);
+        let yVerdiForX = (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+        let pxY = getCy(yVerdiForX);
+
+        // Tegner en rød/hvit prikk der verdien treffer kurven
+        ctxStat.fillStyle = '#ff4757';
+        ctxStat.beginPath();
+        ctxStat.arc(pxX, pxY, 5, 0, 2 * Math.PI);
+        ctxStat.fill();
+        ctxStat.strokeStyle = '#fff';
+        ctxStat.lineWidth = 1;
+        ctxStat.stroke();
+
+        // Stiplet strek fra prikken ned til x-aksen
+        ctxStat.beginPath();
+        ctxStat.setLineDash([2, 3]);
+        ctxStat.strokeStyle = 'rgba(255, 71, 87, 0.7)';
+        ctxStat.moveTo(pxX, pxY);
+        ctxStat.lineTo(pxX, h - 10);
+        ctxStat.stroke();
+        ctxStat.setLineDash([]);
+    } else {
+        document.getElementById('statTekst').innerText = "Fyll inn din verdi for å se den på kurven.";
+    }
+}
+
+// Lytter etter endringer slik at grafen oppdaterer seg live når man skriver!
+if (snittInput && avvikInput && verdiInput) {
+    snittInput.addEventListener('input', tegnNormalfordeling);
+    avvikInput.addEventListener('input', tegnNormalfordeling);
+    verdiInput.addEventListener('input', tegnNormalfordeling);
+},
 
 
 // =========================================
@@ -1424,3 +1540,5 @@ renderFolders();
 oppdaterSirkel();
 tegnHurtigGraf();
  
+if (typeof tegnKastbane === 'function') tegnKastbane();
+if (typeof tegnNormalfordeling === 'function') tegnNormalfordeling();
