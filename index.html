@@ -16,12 +16,33 @@
         <p class="author-tag">Leon Aabak</p>
     </header>
 
-    <nav id="theme-selector" aria-label="Velg fargetema">
-        <button class="theme-dot" style="background: #00d2ff" onclick="setTheme('#00d2ff', '#3a7bd5', 0)" aria-label="Blått tema"></button>
-        <button class="theme-dot" style="background: #00ff87" onclick="setTheme('#00ff87', '#60efff', 1)" aria-label="Grønt tema"></button>
-        <button class="theme-dot" style="background: #e000ff" onclick="setTheme('#e000ff', '#7000ff', 2)" aria-label="Lilla tema"></button>
-        <button class="theme-dot" style="background: #ff8c00" onclick="setTheme('#ff8c00', '#e52d27', 3)" aria-label="Oransje tema"></button>
-        <button class="theme-dot" style="background: #ff69b4" onclick="setTheme('#ff69b4', '#ffb6c1', 4)" aria-label="Rosa tema"></button>
+    <nav class="appearance-controls" aria-label="Utseendealternativer">
+        <div id="theme-selector" aria-label="Velg fargetema" style="display: flex; gap: 12px;">
+            <button class="theme-dot" style="background: #00d2ff" onclick="setTheme('#00d2ff', '#3a7bd5', 0)" aria-label="Blått tema"></button>
+            <button class="theme-dot" style="background: #00ff87" onclick="setTheme('#00ff87', '#60efff', 1)" aria-label="Grønt tema"></button>
+            <button class="theme-dot" style="background: #e000ff" onclick="setTheme('#e000ff', '#7000ff', 2)" aria-label="Lilla tema"></button>
+            <button class="theme-dot" style="background: #ff8c00" onclick="setTheme('#ff8c00', '#e52d27', 3)" aria-label="Oransje tema"></button>
+            <button class="theme-dot" style="background: #ff69b4" onclick="setTheme('#ff69b4', '#ffb6c1', 4)" aria-label="Rosa tema"></button>
+        </div>
+
+        <div class="separator"></div>
+
+        <div id="background-selector" aria-label="Velg bakgrunnsmodus" style="display: flex; gap: 8px;">
+            <button class="appearance-btn" onclick="setBackground('light')" aria-label="Lyst tema">💡</button>
+            <button class="appearance-btn active" onclick="setBackground('normal')" aria-label="Normalt tema">🌙</button>
+            <button class="appearance-btn" onclick="setBackground('dim')" aria-label="Demt tema">🌑</button>
+        </div>
+
+        <div id="fontsize-selector" aria-label="Velg skriftstørrelse" style="display: flex; gap: 8px;">
+            <button class="appearance-btn" onclick="setFontSize('compact')" aria-label="Kompakt">𝐀</button>
+            <button class="appearance-btn active" onclick="setFontSize('normal')" aria-label="Normal">𝐀𝐀</button>
+            <button class="appearance-btn" onclick="setFontSize('large')" aria-label="Stor">𝐀𝐀𝐀</button>
+        </div>
+
+        <div id="contrast-selector" aria-label="Velg kontrastmodus" style="display: flex; gap: 8px;">
+            <button class="appearance-btn active" onclick="setContrast('normal')" aria-label="Normal kontrast">Standard</button>
+            <button class="appearance-btn" onclick="setContrast('high')" aria-label="Høy kontrast">Høy</button>
+        </div>
     </nav>
 
     <main>

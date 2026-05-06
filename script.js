@@ -14,9 +14,60 @@ function setTheme(primary, secondary, index) {
     localStorage.setItem('calcTheme', JSON.stringify({p: primary, s: secondary, i: index}));
 }
 
+function setBackground(mode) {
+    // Remove all background mode classes
+    document.documentElement.classList.remove('bg-light', 'bg-dim');
+    
+    // Add the new mode class if not normal
+    if (mode === 'light') {
+        document.documentElement.classList.add('bg-light');
+    } else if (mode === 'dim') {
+        document.documentElement.classList.add('bg-dim');
+    }
+    
+    // Update button states
+    document.querySelectorAll('#background-selector .appearance-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', ['light', 'normal', 'dim'][idx] === mode);
+    });
+    localStorage.setItem('calcBackground', mode);
+}
+
+function setFontSize(size) {
+    let scale;
+    switch(size) {
+        case 'compact': scale = 0.85; break;
+        case 'large': scale = 1.15; break;
+        default: scale = 1;
+    }
+    document.documentElement.style.setProperty('--font-scale', scale);
+    document.querySelectorAll('#fontsize-selector .appearance-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', ['compact', 'normal', 'large'][idx] === size);
+    });
+    localStorage.setItem('calcFontSize', size);
+}
+
+function setContrast(mode) {
+    let boost = mode === 'high' ? 0.3 : 0;
+    document.documentElement.style.setProperty('--contrast-boost', boost);
+    document.querySelectorAll('#contrast-selector .appearance-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', ['normal', 'high'][idx] === (mode === 'high' ? 1 : 0));
+    });
+    localStorage.setItem('calcContrast', mode);
+}
+
 let savedTheme = JSON.parse(localStorage.getItem('calcTheme'));
 if(savedTheme) setTheme(savedTheme.p, savedTheme.s, savedTheme.i);
 else setTheme('#00d2ff', '#3a7bd5', 0);
+
+// Load saved appearance settings
+let savedBackground = localStorage.getItem('calcBackground') || 'normal';
+setBackground(savedBackground);
+
+let savedFontSize = localStorage.getItem('calcFontSize') || 'normal';
+setFontSize(savedFontSize);
+
+let savedContrast = localStorage.getItem('calcContrast') || 'normal';
+setContrast(savedContrast);
 
 let favorites = JSON.parse(localStorage.getItem('calcFavorites')) || [];
 let historyData = JSON.parse(localStorage.getItem('calcHistory')) || [];
