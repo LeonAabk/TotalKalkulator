@@ -1717,3 +1717,4 @@ tegnHurtigGraf();
  
 if (typeof tegnKastbane === 'function') tegnKastbane();
 if (typeof tegnNormalfordeling === 'function') tegnNormalfordeling();
+  
