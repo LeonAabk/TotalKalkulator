@@ -55,8 +55,17 @@ function setContrast(mode) {
     localStorage.setItem('calcContrast', mode);
 }
 
-let savedTheme = JSON.parse(localStorage.getItem('calcTheme'));
-if(savedTheme) setTheme(savedTheme.p, savedTheme.s, savedTheme.i);
+function safeParseJSON(value, fallback = null) {
+    try {
+        return value ? JSON.parse(value) : fallback;
+    } catch (err) {
+        console.warn('Ugyldig JSON i localStorage, nullstiller verdi:', err);
+        return fallback;
+    }
+}
+
+let savedTheme = safeParseJSON(localStorage.getItem('calcTheme'));
+if (savedTheme && savedTheme.p && savedTheme.s) setTheme(savedTheme.p, savedTheme.s, savedTheme.i);
 else setTheme('#00d2ff', '#3a7bd5', 0);
 
 // Load saved appearance settings
@@ -69,8 +78,8 @@ setFontSize(savedFontSize);
 let savedContrast = localStorage.getItem('calcContrast') || 'normal';
 setContrast(savedContrast);
 
-let favorites = JSON.parse(localStorage.getItem('calcFavorites')) || [];
-let historyData = JSON.parse(localStorage.getItem('calcHistory')) || [];
+let favorites = safeParseJSON(localStorage.getItem('calcFavorites'), []) || [];
+let historyData = safeParseJSON(localStorage.getItem('calcHistory'), []) || [];
 let currentFolder = null;
 let currentCalc = null;
 
@@ -82,6 +91,236 @@ let graphOffsetY = 0;
 let isDraggingGraph = false;
 let dragStartX = 0;
 let dragStartY = 0;
+let showSteps = false;
+let currentQuiz = null;
+let studyCardIndex = -1;
+let quizTotal = 0;
+let quizCorrect = 0;
+let currentHintVisible = false;
+
+const learningTopics = {
+    Prosent: {
+        label: 'Prosent',
+        summary: 'Forstå prosent som andel av et tall, prosentendring og hvordan du bruker prosenter i praktiske problemer.',
+        lessons: [
+            'Prosent av et tall: x% av y regnes ut som (x / 100) * y.',
+            'Prosentendring: (ny - gammel) / gammel * 100 gir hvor mange prosent noe har økt eller sunket.',
+            'Hvis du vet delen og totalen, kan du finne prosent ved å regne (del / total) * 100.'
+        ],
+        generators: [
+            () => {
+                const percent = [5, 10, 15, 20, 25, 30, 40, 50][Math.floor(Math.random() * 8)];
+                const value = Math.floor(Math.random() * 181) + 20;
+                const result = Number(((percent / 100) * value).toFixed(2));
+                return {
+                    text: `Hva er ${percent}% av ${value}?`,
+                    answer: result,
+                    hint: 'Del prosenten på 100 og gang med tallet.',
+                    explanation: `${percent}% av ${value} = ${percent}/100 * ${value} = ${result}`
+                };
+            },
+            () => {
+                const oldValue = Math.floor(Math.random() * 91) + 10;
+                const diff = Math.floor(Math.random() * 41) - 10;
+                const newValue = oldValue + diff;
+                const result = Number(((newValue - oldValue) / oldValue * 100).toFixed(1));
+                return {
+                    text: `Tallet går fra ${oldValue} til ${newValue}. Hvor mange prosent endring er dette?`,
+                    answer: result,
+                    hint: 'Bruk formelen (ny - gammel) / gammel * 100.',
+                    explanation: `(${newValue} - ${oldValue}) / ${oldValue} * 100 = ${result}%`
+                };
+            },
+            () => {
+                const part = Math.floor(Math.random() * 9) + 1;
+                const total = Math.floor(Math.random() * 91) + 10;
+                const result = Number(((part / total) * 100).toFixed(1));
+                return {
+                    text: `Hvor mange prosent er ${part} av ${total}?`,
+                    answer: result,
+                    hint: 'Del delen på totalen og gang med 100.',
+                    explanation: `${part}/${total} * 100 = ${result}%`
+                };
+            }
+        ]
+    },
+    Algebra: {
+        label: 'Algebra',
+        summary: 'Løs enkle ligninger, bruk lineære funksjoner og forstå grunnleggende funksjonsregning.',
+        lessons: [
+            'En lineær funksjon har formen y = ax + b. Skriv alltid x-leddet først.',
+            'For å løse ax + b = c flytter du b over til høyre og deler på a.',
+            'Nullpunkt er der funksjonen går gjennom x-aksen, altså der y = 0.'
+        ],
+        generators: [
+            () => {
+                const a = Math.floor(Math.random() * 8) + 1;
+                const b = Math.floor(Math.random() * 11) - 5;
+                const x = Math.floor(Math.random() * 11) - 3;
+                const result = a * x + b;
+                return {
+                    text: `Funksjonen y = ${a}x ${b >= 0 ? '+' + b : b}. Hva er y når x = ${x}?`,
+                    answer: result,
+                    hint: 'Sett x inn i uttrykket og regn ut.',
+                    explanation: `${a} * ${x} ${b >= 0 ? '+' + b : b} = ${result}`
+                };
+            },
+            () => {
+                const a = Math.floor(Math.random() * 8) + 1;
+                const b = Math.floor(Math.random() * 11) - 5;
+                const result = Number((-b / a).toFixed(2));
+                return {
+                    text: `Finn nullpunktet for ligningen ${a}x ${b >= 0 ? '+' + b : b} = 0. Hva er x?`,
+                    answer: result,
+                    hint: 'Løs for x ved å flytte b til andre siden og dele på a.',
+                    explanation: `x = ${-b} / ${a} = ${result}`
+                };
+            },
+            () => {
+                const a = Math.floor(Math.random() * 6) + 1;
+                const x = Math.floor(Math.random() * 11) - 3;
+                const b = Math.floor(Math.random() * 11) - 5;
+                const y = a * x + b;
+                return {
+                    text: `I y = ${a}x ${b >= 0 ? '+' + b : b}, er x = ${x}. Hva er y?`,
+                    answer: y,
+                    hint: 'Sett x inn og regn ut.',
+                    explanation: `${a} * ${x} ${b >= 0 ? '+' + b : b} = ${y}`
+                };
+            }
+        ]
+    },
+    Geometri: {
+        label: 'Geometri',
+        summary: 'Lær formler for areal og volum, og forstå hvordan du bruker dem i praktiske oppgaver.',
+        lessons: [
+            'Arealet av en sirkel er πr². Bruk gjerne 3.14 for π i beregninger.',
+            'Volumet av en sylinder er πr²h. Først areal av grunnflaten, så multipliser med høyden.',
+            'Arealet av et trapes er ((a + b) / 2) * h.'
+        ],
+        generators: [
+            () => {
+                const r = Math.floor(Math.random() * 8) + 2;
+                const result = Number((Math.PI * r * r).toFixed(2));
+                return {
+                    text: `Hva er arealet av en sirkel med radius ${r}?`,
+                    answer: result,
+                    hint: 'Areal = πr².',
+                    explanation: `A = π * ${r}² = ${result}`
+                };
+            },
+            () => {
+                const a = Math.floor(Math.random() * 11) + 1;
+                const b = Math.floor(Math.random() * 11) + 1;
+                const h = Math.floor(Math.random() * 11) + 1;
+                const result = Number((((a + b) / 2) * h).toFixed(1));
+                return {
+                    text: `Hva er arealet av et trapes med parallelle sider ${a} og ${b} og høyde ${h}?`,
+                    answer: result,
+                    hint: 'Areal = ((a + b) / 2) * h.',
+                    explanation: `(( ${a} + ${b}) / 2 ) * ${h} = ${result}`
+                };
+            },
+            () => {
+                const r = Math.floor(Math.random() * 5) + 2;
+                const h = Math.floor(Math.random() * 11) + 1;
+                const result = Number((Math.PI * r * r * h).toFixed(1));
+                return {
+                    text: `Volumet av en sylinder med radius ${r} og høyde ${h} er ?`,
+                    answer: result,
+                    hint: 'Volum = πr²h.',
+                    explanation: `V = π * ${r}² * ${h} = ${result}`
+                };
+            }
+        ]
+    },
+    Statistikk: {
+        label: 'Statistikk',
+        summary: 'Jobb med gjennomsnitt og sannsynlighet for å bygge gode ferdigheter i statistikk.',
+        lessons: [
+            'Gjennomsnittet er summen av alle tall delt på antallet tall.',
+            'Sannsynlighet kan skrives som antall gunstige utfall delt på antall mulige utfall.',
+            'Husk at gjennomsnitt og sannsynlighet ofte er nyttig i praktiske situasjoner som spill og undersøkelser.'
+        ],
+        generators: [
+            () => {
+                const values = [Math.floor(Math.random() * 11) + 1, Math.floor(Math.random() * 11) + 1, Math.floor(Math.random() * 11) + 1];
+                const result = Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(1));
+                return {
+                    text: `Hva er gjennomsnittet av ${values.join(', ')}?`,
+                    answer: result,
+                    hint: 'Legg sammen alle tallene og del på antallet.',
+                    explanation: `(${values.join(' + ')}) / ${values.length} = ${result}`
+                };
+            },
+            () => {
+                const favorable = Math.floor(Math.random() * 5) + 1;
+                const total = Math.floor(Math.random() * 6) + favorable;
+                const result = Number(((favorable / total) * 100).toFixed(1));
+                return {
+                    text: `Hva er sannsynligheten for riktig utfall hvis ${favorable} av ${total} er gunstige?`,
+                    answer: result,
+                    hint: 'Del gunstige utfall på totalen og gang med 100.',
+                    explanation: `(${favorable}/${total}) * 100 = ${result}%`
+                };
+            },
+            () => {
+                const a = Math.floor(Math.random() * 12) + 1;
+                const b = Math.floor(Math.random() * 12) + 1;
+                const c = Math.floor(Math.random() * 12) + 1;
+                const result = Number((Math.max(a, b, c) - Math.min(a, b, c)).toFixed(1));
+                return {
+                    text: `Hva er spennvidden for tallene ${a}, ${b} og ${c}?`,
+                    answer: result,
+                    hint: 'Spennvidde er største minus minste tall.',
+                    explanation: `${Math.max(a, b, c)} - ${Math.min(a, b, c)} = ${result}`
+                };
+            }
+        ]
+    },
+    Fysikk: {
+        label: 'Fysikk',
+        summary: 'Løs oppgaver med hastighet, bølger og enkle fysiske formler.',
+        lessons: [
+            'Fart er distanse delt på tid: v = s / t.',
+            'Bølgefart er f * λ, der f er frekvens og λ er bølgelengde.',
+            'Lydfart i luft varierer med temperatur, cirka 331,3 + 0,6t.'
+        ],
+        generators: [
+            () => {
+                const speed = Math.floor(Math.random() * 16) + 5;
+                const result = Number((speed * 3.6).toFixed(1));
+                return {
+                    text: `Hvor mange km/t er ${speed} m/s?`,
+                    answer: result,
+                    hint: 'Gang med 3,6.',
+                    explanation: `${speed} * 3.6 = ${result}`
+                };
+            },
+            () => {
+                const frequency = Math.floor(Math.random() * 20) + 5;
+                const wavelength = Math.floor(Math.random() * 9) + 2;
+                const result = Number((frequency * wavelength).toFixed(1));
+                return {
+                    text: `Bølgefarten er f * λ. Hvor stor er bølgefarten når f = ${frequency} Hz og λ = ${wavelength} m?`,
+                    answer: result,
+                    hint: 'Gang frekvensen med bølgelengden.',
+                    explanation: `${frequency} * ${wavelength} = ${result}`
+                };
+            },
+            () => {
+                const temp = Math.floor(Math.random() * 21) + 5;
+                const result = Number((331.3 + 0.6 * temp).toFixed(1));
+                return {
+                    text: `Hva er lydfarten ved ${temp} °C?`,
+                    answer: result,
+                    hint: 'Bruk formelen 331.3 + 0.6t.',
+                    explanation: `331.3 + 0.6 * ${temp} = ${result}`
+                };
+            }
+        ]
+    }
+};
 
 const calculators = [
     // GRUNNLEGGENDE (5)
@@ -136,6 +375,12 @@ const calculators = [
     // ALGEBRA (10)
     { id: 23, folder: "Algebra", name: "Lineær funksjon", formula: "y = ax + b", html: '<input type="number" id="i1" placeholder="x1"><input type="number" id="i2" placeholder="y1"><input type="number" id="i3" placeholder="x2"><input type="number" id="i4" placeholder="y2">', calc: () => {
         let x1=parseFloat(document.getElementById('i1').value), y1=parseFloat(document.getElementById('i2').value), x2=parseFloat(document.getElementById('i3').value), y2=parseFloat(document.getElementById('i4').value);
+        if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+            return { res: "Feil: Fyll inn alle verdier", exp: "Skriv inn både x1, y1, x2 og y2." };
+        }
+        if (x1 === x2) {
+            return { res: "Feil: x1 og x2 kan ikke være like", exp: "To ulike punkt på en linje må ha forskjellig x-verdi." };
+        }
         let a = (y2-y1)/(x2-x1), b = y1-(a*x1);
         return { res: `y = ${a}x ${b>=0?'+':''} ${b}`, exp: `a = (${y2}-${y1})/(${x2}-${x1}) = ${a}\nb = ${y1}-(${a}*${x1}) = ${b}`, graph: (x) => a*x+b };
     }},
@@ -185,12 +430,16 @@ const calculators = [
     },
     { id: 13, folder: "Algebra", name: "Topp/Bunnpunkt", formula: "x = -b / 2a", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c">', calc: () => {
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), c=parseFloat(document.getElementById('i3').value);
+        if (isNaN(a) || isNaN(b) || isNaN(c)) return { res: "Feil: Fyll inn a, b og c" };
+        if (a === 0) return { res: "Feil: a kan ikke være 0", exp: "Da er funksjonen ikke en andregradsfunksjon." };
         let x = -b/(2*a), y = a*x*x+b*x+c;
         return { res: `Punkt: (${x.toFixed(2)}, ${y.toFixed(2)})`, exp: `x = -${b}/(2*${a}) = ${x}\ny = f(${x}) = ${y}`, graph: (val) => a*val*val+b*val+c };
     }},
     { id: 14, folder: "Algebra", name: "Nullpunkt (Lineær)", formula: "ax + b = 0", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b">', calc: () => {
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value);
-        return { res: `x = ${-b/a}`, exp: `ax = -b\nx = -${b}/${a}`, graph: (x) => a*x+b };
+        if (isNaN(a) || isNaN(b)) return { res: "Feil: Fyll inn a og b" };
+        if (a === 0) return { res: "Feil: a kan ikke være 0", exp: "En lineær funksjon må ha en x-koeffisient." };
+        return { res: `x = ${(-b/a).toFixed(2)}`, exp: `ax = -b\nx = -${b}/${a} = ${(-b/a).toFixed(2)}`, graph: (x) => a*x+b };
     }},
     { id: 10, folder: "Algebra", name: "Momentan vekstfart", formula: "f'(x) = 2ax + b", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="x">', calc: () => {
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), x=parseFloat(document.getElementById('i3').value);
@@ -198,7 +447,9 @@ const calculators = [
     }},
     { id: 9, folder: "Algebra", name: "Gj.snittlig vekstfart", formula: "Δy / Δx", html: '<input type="number" id="i1" placeholder="x1"><input type="number" id="i2" placeholder="y1"><input type="number" id="i3" placeholder="x2"><input type="number" id="i4" placeholder="y2">', calc: () => {
         let x1=parseFloat(document.getElementById('i1').value), y1=parseFloat(document.getElementById('i2').value), x2=parseFloat(document.getElementById('i3').value), y2=parseFloat(document.getElementById('i4').value);
-        return { res: `Vekstfart: ${(y2-y1)/(x2-x1)}`, exp: `(${y2}-${y1}) / (${x2}-${x1}) = ${(y2-y1)/(x2-x1)}` };
+        if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) return { res: "Feil: Fyll inn alle verdier" };
+        if (x2 === x1) return { res: "Feil: x2 kan ikke være lik x1", exp: "Delta x kan ikke være null." };
+        return { res: `Vekstfart: ${((y2-y1)/(x2-x1)).toFixed(2)}`, exp: `(${y2}-${y1}) / (${x2}-${x1}) = ${((y2-y1)/(x2-x1)).toFixed(2)}` };
     }},
     { id: 12, folder: "Algebra", name: "Eksponentiell", formula: "y = a * b^x", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="x">', calc: () => {
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), x=parseFloat(document.getElementById('i3').value);
@@ -206,6 +457,8 @@ const calculators = [
     }},
     { id: 34, folder: "Algebra", name: "Asymptoter (Rasjonell)", formula: "f(x) = (ax+b)/(cx+d)", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="c"><input type="number" id="i4" placeholder="d">', calc: () => {
         let a=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), c=parseFloat(document.getElementById('i3').value), d=parseFloat(document.getElementById('i4').value);
+        if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) return { res: "Feil: Fyll inn a, b, c og d" };
+        if (c === 0) return { res: "Feil: c kan ikke være 0", exp: "Da er funksjonen ikke rasjonell med den forventede formelen." };
         let vert = -d/c; let hori = a/c;
         return { res: `Vertikal: x = ${vert.toFixed(2)}, Horisontal: y = ${hori.toFixed(2)}`, exp: `Vertikal: cx+d=0 -> x = -d/c = -${d}/${c}\nHorisontal: x->∞ -> y = a/c = ${a}/${c}`, graph: (x) => (a*x+b)/(c*x+d) };
     }},
@@ -1011,15 +1264,31 @@ const calculators = [
     // KONVERTERING (3)
     { id: 31, folder: "Konvertering", name: "CM til Feet", formula: "cm / 30.48", html: '<input type="number" id="i1" placeholder="Centimeter">', calc: () => {
         let cm=parseFloat(document.getElementById('i1').value);
-        return { res: (cm / 30.48).toFixed(4) + " ft", exp: `${cm} / 30.48` };
+        return { res: (cm / 30.48).toFixed(4) + " ft", exp: `${cm} / 30.48 = ${(cm / 30.48).toFixed(4)} ft` };
     }},
     { id: 32, folder: "Konvertering", name: "Hekto til Gram", formula: "hg * 100", html: '<input type="number" id="i1" placeholder="Hektogram">', calc: () => {
         let hg=parseFloat(document.getElementById('i1').value);
-        return { res: (hg * 100) + " g", exp: `${hg} * 100` };
+        return { res: (hg * 100) + " g", exp: `${hg} * 100 = ${hg * 100} g` };
     }},
     { id: 33, folder: "Konvertering", name: "Liter til dl/ml", formula: "L -> dl & ml", html: '<input type="number" id="i1" placeholder="Liter">', calc: () => {
         let l=parseFloat(document.getElementById('i1').value);
-        return { res: `${l*10} dl / ${l*1000} ml` };
+        return { res: `${l*10} dl / ${l*1000} ml`, exp: `${l} L = ${l*10} dl = ${l*1000} ml` };
+    }},
+    { id: 67, folder: "Konvertering", name: "M/S til KM/T", formula: "v * 3.6", html: '<input type="number" id="i1" placeholder="M/S">', calc: () => {
+        let v = parseFloat(document.getElementById('i1').value);
+        let kmh = v * 3.6;
+        return { res: `${kmh.toFixed(1)} km/t`, exp: `${v} * 3.6 = ${kmh.toFixed(1)} km/t` };
+    }},
+    { id: 68, folder: "Konvertering", name: "Gram til Kilogram", formula: "g / 1000", html: '<input type="number" id="i1" placeholder="Gram">', calc: () => {
+        let g = parseFloat(document.getElementById('i1').value);
+        let kg = g / 1000;
+        return { res: `${kg.toFixed(3)} kg`, exp: `${g} / 1000 = ${kg.toFixed(3)} kg` };
+    }},
+    { id: 69, folder: "Fysikk", name: "Energien i hvilemasse", formula: "E = m c²", html: '<input type="number" id="i1" placeholder="Masse (kg)">', calc: () => {
+        let m = parseFloat(document.getElementById('i1').value);
+        const c = 299792458;
+        let e = m * c * c;
+        return { res: `${e.toExponential(3)} J`, exp: `E = m c²\nE = ${m} * ${c}² = ${e.toExponential(3)} J` };
     }},
     { 
         id: 43, 
@@ -1186,6 +1455,7 @@ function toggleFav(id, e) {
 
 function openCalc(c) {
     currentCalc = c; 
+    currentGraphFunc = null;
     listView.style.display = 'none'; 
     calcView.style.display = 'block';
     
@@ -1200,6 +1470,8 @@ function openCalc(c) {
     document.getElementById('pre-calc-formula').innerText = c.formula;
     document.getElementById('input-container').innerHTML = c.html; 
     document.getElementById('result-container').style.display = 'none';
+    document.getElementById('explanation-box').innerText = '';
+    updateGraphButtons(false);
 }
 
 function showHome() { 
@@ -1214,18 +1486,27 @@ async function executeCalc() {
     const res = await currentCalc.calc();
     
     document.getElementById('result-box').innerText = "Svar: " + res.res;
-    document.getElementById('explanation-box').innerText = res.exp || "";
+    renderExplanation(res.exp || "");
     
-    if(res.graph) { 
-        document.getElementById('graph-container').style.display = 'block'; 
+    if(res.graph && typeof res.graph === 'function') {
+        document.getElementById('graph-container').style.display = 'block';
         currentGraphFunc = res.graph;
-        graphOffsetX = 0; 
-        graphOffsetY = 0; 
-        graphScale = 30; 
-        drawGraph(); 
-    } else { 
-        document.getElementById('graph-container').style.display = 'none'; 
+        graphOffsetX = 0;
+        graphOffsetY = 0;
+        graphScale = 30;
+        try {
+            drawGraph();
+            updateGraphButtons(true);
+        } catch (err) {
+            currentGraphFunc = null;
+            document.getElementById('graph-container').style.display = 'none';
+            updateGraphButtons(false);
+            renderExplanation((res.exp || '') + `\n\nGrafen kunne ikke vises: ${err.message}`);
+        }
+    } else {
+        document.getElementById('graph-container').style.display = 'none';
         currentGraphFunc = null;
+        updateGraphButtons(false);
     }
     
     historyData = [{name: currentCalc.name, res: res.res}, ...historyData].slice(0, 10);
@@ -1240,6 +1521,148 @@ function copyResult() {
     setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+function updateGraphButtons(enable) {
+    const downloadBtn = document.getElementById('download-graph-btn');
+    const shareBtn = document.getElementById('share-graph-btn');
+    downloadBtn.disabled = !enable;
+    shareBtn.disabled = !enable || !navigator.share;
+}
+
+function toggleSteps() {
+    showSteps = !showSteps;
+    document.getElementById('toggle-steps-btn').innerText = showSteps ? 'Skjul steg' : 'Vis steg';
+    renderExplanation(document.getElementById('explanation-box').dataset.content || document.getElementById('explanation-box').innerText);
+}
+
+function renderExplanation(exp) {
+    const box = document.getElementById('explanation-box');
+    box.dataset.content = exp;
+    if (!exp) {
+        box.innerText = '';
+        return;
+    }
+
+    if (showSteps) {
+        box.innerHTML = exp.split('\n').map(line => `<div class="step-line">${line || '&nbsp;'}</div>`).join('');
+    } else {
+        box.innerText = exp;
+    }
+}
+
+function downloadGraph() {
+    if (!currentGraphFunc) return;
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `graf-${currentCalc ? currentCalc.name.replace(/\s+/g, '_') : 'graf'}.png`;
+    a.click();
+}
+
+async function shareGraph() {
+    if (!currentGraphFunc || !navigator.share) {
+        alert('Deling av graf er ikke tilgjengelig her.');
+        return;
+    }
+    try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'graf.png', { type: 'image/png' });
+        await navigator.share({
+            title: currentCalc ? `Graf: ${currentCalc.name}` : 'Graf fra Total Kalkulator',
+            text: 'Se denne grafen fra Total Kalkulator.',
+            files: [file]
+        });
+    } catch (err) {
+        console.warn(err);
+        alert('Kunne ikke dele grafen akkurat nå.');
+    }
+}
+
+function getSelectedLearningTopic() {
+    return document.getElementById('learning-topic') ? document.getElementById('learning-topic').value : 'Prosent';
+}
+
+function loadLessonCard() {
+    const topic = learningTopics[getSelectedLearningTopic()];
+    if (!topic) return;
+    studyCardIndex = (studyCardIndex + 1) % topic.lessons.length;
+    document.getElementById('learning-card').innerHTML = `
+        <strong>${topic.label}</strong>
+        <p style="margin-top: 10px; color: #ccc; line-height: 1.6;">${topic.summary}</p>
+        <p style="margin-top: 14px; font-weight: 600;">${topic.lessons[studyCardIndex]}</p>
+    `;
+}
+
+function renderLearningStats() {
+    document.getElementById('quiz-score').innerText = quizCorrect;
+    document.getElementById('quiz-total').innerText = quizTotal;
+    document.getElementById('quiz-correct').innerText = quizCorrect;
+}
+
+function createQuizQuestion() {
+    const topicName = getSelectedLearningTopic();
+    const topic = learningTopics[topicName] || learningTopics.Prosent;
+    const generator = topic.generators[Math.floor(Math.random() * topic.generators.length)];
+    return generator();
+}
+
+function loadQuizQuestion() {
+    currentQuiz = createQuizQuestion();
+    const topic = learningTopics[getSelectedLearningTopic()];
+    document.getElementById('learning-card').innerHTML = `
+        <strong>${topic.label} - Oppgave</strong>
+        <p style="margin-top: 10px; color: #ccc; line-height: 1.6;">${currentQuiz.text}</p>
+    `;
+    document.getElementById('quiz-feedback').innerText = 'Skriv inn svaret og trykk Sjekk svar.';
+    document.getElementById('quiz-answer').value = '';
+    document.getElementById('quiz-hint').innerText = '';
+    document.getElementById('quiz-hint').classList.remove('visible');
+    currentHintVisible = false;
+    renderLearningStats();
+}
+
+function toggleHint() {
+    const hintEl = document.getElementById('quiz-hint');
+    if (!currentQuiz) {
+        hintEl.innerText = 'Start en oppgave først for å se hint.';
+        hintEl.classList.add('visible');
+        return;
+    }
+    currentHintVisible = !currentHintVisible;
+    if (currentHintVisible) {
+        hintEl.innerText = currentQuiz.hint || 'Prøv å bruk formelen du lærte i temaet.';
+        hintEl.classList.add('visible');
+    } else {
+        hintEl.innerText = '';
+        hintEl.classList.remove('visible');
+    }
+}
+
+function checkQuizAnswer() {
+    const answerEl = document.getElementById('quiz-answer');
+    const feedback = document.getElementById('quiz-feedback');
+    if (!currentQuiz) {
+        feedback.innerText = 'Trykk på Ny oppgave først.';
+        return;
+    }
+    const guess = answerEl.value.trim().replace(',', '.');
+    const guessNum = Number(guess);
+    if (guess === '' || isNaN(guessNum)) {
+        feedback.innerText = 'Skriv inn et gyldig tall.';
+        return;
+    }
+
+    quizTotal += 1;
+    const diff = Math.abs(guessNum - Number(currentQuiz.answer));
+    if (diff <= 0.1) {
+        quizCorrect += 1;
+        feedback.innerText = `Riktig! ${currentQuiz.explanation}`;
+    } else {
+        feedback.innerText = `Nesten! Riktig svar er ${currentQuiz.answer}. ${currentQuiz.explanation}`;
+    }
+    renderLearningStats();
+}
+
 function renderHistory() {
     const list = document.getElementById('history-list');
     list.innerHTML = historyData.length ? historyData.map(h => `<div class="history-item"><b>${h.name}</b><span>${h.res}</span></div>`).join('') : '<i>Ingen historikk enda.</i>';
@@ -1251,86 +1674,127 @@ function renderHistory() {
 
 function drawGraph() {
     if (!currentGraphFunc) return;
-    
-    const w = canvas.width = canvas.parentElement.clientWidth; 
-    const h = canvas.height = 350;
-    
-    ctx.clearRect(0, 0, w, h); 
-    
-    const ox = w / 2 + graphOffsetX; 
-    const oy = h / 2 + graphOffsetY; 
-    
-    let step = 1;
-    if (graphScale < 15) step = 5;
-    if (graphScale < 5) step = 10;
-    if (graphScale > 60) step = 0.5;
-    if (graphScale > 150) step = 0.1;
 
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(320, Math.round(rect.width));
+    const h = 350;
+
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const ox = w / 2 + graphOffsetX;
+    const oy = h / 2 + graphOffsetY;
+
+    let gridStep = 1;
+    if (graphScale > 150) gridStep = 0.2;
+    else if (graphScale > 80) gridStep = 0.5;
+    else if (graphScale > 40) gridStep = 1;
+    else if (graphScale > 20) gridStep = 2;
+    else if (graphScale > 10) gridStep = 5;
+    else if (graphScale > 4) gridStep = 10;
+    else gridStep = 20;
+
+    ctx.save();
     ctx.font = '11px sans-serif';
-    ctx.fillStyle = '#888';
-    ctx.strokeStyle = '#222'; 
-    ctx.lineWidth = 1; 
-
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    for (let i = 0; ox + i * graphScale < w || ox - i * graphScale > 0; i += step) {
-        let px = ox + i * graphScale;
-        if (px <= w && px >= 0) {
-            ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke();
-            if (i !== 0) ctx.fillText(i, px, oy + 5);
+
+    const limit = Math.max(w, h) / graphScale + 4;
+    for (let i = 0; i <= limit; i += gridStep) {
+        const xPos = ox + i * graphScale;
+        if (xPos >= 0 && xPos <= w) {
+            ctx.beginPath(); ctx.moveTo(xPos, 0); ctx.lineTo(xPos, h); ctx.stroke();
+            if (i !== 0) ctx.fillText(i, xPos, oy + 6);
         }
-        let nx = ox - i * graphScale;
-        if (i !== 0 && nx >= 0 && nx <= w) {
-            ctx.beginPath(); ctx.moveTo(nx, 0); ctx.lineTo(nx, h); ctx.stroke();
-            ctx.fillText(-i, nx, oy + 5);
+        if (i !== 0) {
+            const xNeg = ox - i * graphScale;
+            if (xNeg >= 0 && xNeg <= w) {
+                ctx.beginPath(); ctx.moveTo(xNeg, 0); ctx.lineTo(xNeg, h); ctx.stroke();
+                ctx.fillText(-i, xNeg, oy + 6);
+            }
         }
     }
 
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    for (let i = 0; oy + i * graphScale < h || oy - i * graphScale > 0; i += step) {
-        let py = oy + i * graphScale;
-        if (py <= h && py >= 0) {
-            ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
-            if (i !== 0) ctx.fillText(-i, ox - 5, py);
+    for (let i = 0; i <= limit; i += gridStep) {
+        const yPos = oy + i * graphScale;
+        if (yPos >= 0 && yPos <= h) {
+            ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(w, yPos); ctx.stroke();
+            if (i !== 0) ctx.fillText(-i, ox - 8, yPos);
         }
-        let ny = oy - i * graphScale;
-        if (i !== 0 && ny >= 0 && ny <= h) {
-            ctx.beginPath(); ctx.moveTo(0, ny); ctx.lineTo(w, ny); ctx.stroke();
-            ctx.fillText(i, ox - 5, ny);
+        if (i !== 0) {
+            const yNeg = oy - i * graphScale;
+            if (yNeg >= 0 && yNeg <= h) {
+                ctx.beginPath(); ctx.moveTo(0, yNeg); ctx.lineTo(w, yNeg); ctx.stroke();
+                ctx.fillText(i, ox - 8, yNeg);
+            }
         }
     }
-    
-    ctx.strokeStyle = '#555'; 
-    ctx.lineWidth = 2; 
-    ctx.beginPath(); 
-    ctx.moveTo(0, oy); ctx.lineTo(w, oy); 
-    ctx.moveTo(ox, 0); ctx.lineTo(ox, h); 
+
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, oy); ctx.lineTo(w, oy);
+    ctx.moveTo(ox, 0); ctx.lineTo(ox, h);
     ctx.stroke();
 
-    ctx.fillText("0", ox - 5, oy + 12);
-    
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#00d2ff'; 
-    ctx.lineWidth = 2; 
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('0', ox + 6, oy - 6);
+
+    const graphColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#00d2ff';
+    ctx.strokeStyle = graphColor;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    
-    let lastY = null;
-    for(let px = 0; px <= w; px += 1) { 
-        let mx = (px - ox) / graphScale; 
-        let my = currentGraphFunc(mx);   
-        let py = oy - (my * graphScale); 
-        
-        if (lastY !== null && Math.abs(py - lastY) > h/2) {
-            ctx.stroke(); 
-            ctx.beginPath(); 
-            ctx.moveTo(px, py);
-        } else if (!isNaN(py) && isFinite(py)) {
-            if (lastY === null) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
+
+    let hasStarted = false;
+    let lastPy = 0;
+    for (let px = 0; px <= w; px += 1) {
+        const mx = (px - ox) / graphScale;
+        let my;
+        try {
+            my = currentGraphFunc(mx);
+        } catch (err) {
+            hasStarted = false;
+            lastPy = null;
+            continue;
         }
-        lastY = py;
-    } 
+
+        if (typeof my !== 'number' || !isFinite(my) || Math.abs(my) > 1e4) {
+            hasStarted = false;
+            lastPy = null;
+            continue;
+        }
+
+        const py = oy - my * graphScale;
+        if (!hasStarted) {
+            ctx.moveTo(px, py);
+            hasStarted = true;
+        } else {
+            if (lastPy !== null && Math.abs(py - lastPy) > h) {
+                ctx.moveTo(px, py);
+            } else {
+                ctx.lineTo(px, py);
+            }
+        }
+        lastPy = py;
+    }
     ctx.stroke();
+    ctx.restore();
 }
 
 canvas.addEventListener('mousedown', (e) => {
@@ -1372,19 +1836,26 @@ let hurtigGraphZoom = 15;
 let hurtigGraphOffsetX = 0;
 
 function tegnHurtigGraf() {
-    const w = hurtigCanvas.width, h = hurtigCanvas.height, s = hurtigGraphZoom;
-    hurtigCtx.clearRect(0,0,w,h);
+    const rect = hurtigCanvas.getBoundingClientRect();
+    const w = Math.max(160, Math.round(rect.width));
+    const h = Math.max(120, Math.round(rect.height));
+    const dpr = window.devicePixelRatio || 1;
+    hurtigCanvas.width = Math.round(w * dpr);
+    hurtigCanvas.height = Math.round(h * dpr);
+    hurtigCanvas.style.width = `${w}px`;
+    hurtigCanvas.style.height = `${h}px`;
+    hurtigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    hurtigCtx.clearRect(0, 0, w, h);
     
-    // Tegn grid bakgrunn
-    hurtigCtx.fillStyle = 'rgba(0,0,0,0.2)';
+    hurtigCtx.fillStyle = 'rgba(6, 10, 16, 0.95)';
     hurtigCtx.fillRect(0, 0, w, h);
     
-    // Tegn gridlinjer
-    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.1)'; 
+    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.12)'; 
     hurtigCtx.lineWidth = 1;
+    hurtigCtx.setLineDash([3, 3]);
     for(let i = -5; i <= 5; i++) {
         if(i !== 0) {
-            let px = w/2 + i*s;
+            let px = w/2 + i*hurtigGraphZoom;
             hurtigCtx.beginPath();
             hurtigCtx.moveTo(px, 0); 
             hurtigCtx.lineTo(px, h);
@@ -1393,7 +1864,7 @@ function tegnHurtigGraf() {
     }
     for(let i = -3; i <= 3; i++) {
         if(i !== 0) {
-            let py = h/2 - i*s;
+            let py = h/2 - i*hurtigGraphZoom;
             hurtigCtx.beginPath();
             hurtigCtx.moveTo(0, py); 
             hurtigCtx.lineTo(w, py);
@@ -1401,65 +1872,73 @@ function tegnHurtigGraf() {
         }
     }
     
-    // Tegn aksene
-    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.4)'; 
+    hurtigCtx.setLineDash([]);
+    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.45)'; 
     hurtigCtx.lineWidth = 2;
     hurtigCtx.beginPath();
     hurtigCtx.moveTo(0, h/2); hurtigCtx.lineTo(w, h/2); 
     hurtigCtx.moveTo(w/2, 0); hurtigCtx.lineTo(w/2, h); 
     hurtigCtx.stroke();
     
-    // Tegn akselabels
-    hurtigCtx.fillStyle = 'rgba(255,255,255,0.5)';
+    hurtigCtx.fillStyle = 'rgba(255,255,255,0.7)';
     hurtigCtx.font = '10px sans-serif';
     hurtigCtx.textAlign = 'center';
+    hurtigCtx.textBaseline = 'top';
     for(let i = -2; i <= 2; i++) {
         if(i !== 0) {
-            let px = w/2 + i*s;
+            let px = w/2 + i*hurtigGraphZoom;
             hurtigCtx.fillText(i, px, h/2 + 12);
         }
     }
     hurtigCtx.textAlign = 'right';
     for(let i = -2; i <= 2; i++) {
         if(i !== 0) {
-            let py = h/2 - i*s;
-            hurtigCtx.fillText(i, w/2 - 8, py + 4);
+            let py = h/2 - i*hurtigGraphZoom;
+            hurtigCtx.fillText(i, w/2 - 6, py + 4);
         }
     }
     
     let expr = hurtigInput.value.trim();
     if (!expr) return;
     
-    expr = expr.replace(/x/g, '(x)')
+    expr = expr.replace(/\bx\b/g, '(x)')
                .replace(/\^/g, '**')
+               .replace(/\bpi\b/gi, 'Math.PI')
+               .replace(/\be\b/gi, 'Math.E')
                .replace(/sin/g, 'Math.sin')
                .replace(/cos/g, 'Math.cos')
                .replace(/tan/g, 'Math.tan')
                .replace(/sqrt/g, 'Math.sqrt')
                .replace(/abs/g, 'Math.abs')
-               .replace(/log/g, 'Math.log10')
-               .replace(/ln/g, 'Math.log');
+               .replace(/log\b/g, 'Math.log10')
+               .replace(/\bln\b/g, 'Math.log');
                
-    const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#ffffff';
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#ffffff';
     hurtigCtx.strokeStyle = primaryColor;
-    hurtigCtx.lineWidth = 2;
+    hurtigCtx.lineWidth = 2.5;
+    hurtigCtx.lineJoin = 'round';
+    hurtigCtx.lineCap = 'round';
     hurtigCtx.beginPath();
     
     let isDrawing = false;
     let lastY = null;
-    for(let px=0; px<=w; px++) {
-        let x = (px - w/2) / s;
+    for(let px = 0; px <= w; px += 1) {
+        let x = (px - w/2) / hurtigGraphZoom;
         try {
             let y = eval(expr);
-            let py = h/2 - y*s;
-            if (isNaN(py) || !isFinite(py) || Math.abs(py - (lastY || py)) > 100) {
+            if (typeof y !== 'number' || !isFinite(y) || Math.abs(y) > 1e4) {
                 isDrawing = false;
                 lastY = null;
-            } else {
-                if(!isDrawing) { hurtigCtx.moveTo(px, py); isDrawing = true; } 
-                else { hurtigCtx.lineTo(px, py); }
-                lastY = py;
+                continue;
             }
+            let py = h/2 - y*hurtigGraphZoom;
+            if (lastY !== null && Math.abs(py - lastY) > h) {
+                isDrawing = false;
+                lastY = null;
+            }
+            if(!isDrawing) { hurtigCtx.moveTo(px, py); isDrawing = true; } 
+            else { hurtigCtx.lineTo(px, py); }
+            lastY = py;
         } catch(e) {
             isDrawing = false;
             lastY = null;
@@ -1875,6 +2354,8 @@ if (fartInput && kastvinkelInput) {
 renderFolders();
 oppdaterSirkel();
 tegnHurtigGraf();
+loadLessonCard();
+loadQuizQuestion();
  
 if (typeof tegnKastbane === 'function') tegnKastbane();
 if (typeof tegnNormalfordeling === 'function') tegnNormalfordeling();

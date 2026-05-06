@@ -68,8 +68,11 @@
                     <div id="input-container"></div>
                     <button class="action-btn" onclick="executeCalc()">Regn ut (Enter)</button>
                     
-                    <section id="result-container">
-                        <div id="result-box" role="status"></div>
+                    <section id="result-container">                        <div id="result-controls" class="result-controls">
+                            <button class="action-btn small" id="toggle-steps-btn" onclick="toggleSteps()">Vis steg</button>
+                            <button class="action-btn small" id="download-graph-btn" onclick="downloadGraph()">Last ned graf</button>
+                            <button class="action-btn small" id="share-graph-btn" onclick="shareGraph()">Del graf</button>
+                        </div>                        <div id="result-box" role="status"></div>
                         <div id="explanation-box"></div>
                         <div id="graph-container"><canvas id="graphCanvas"></canvas></div>
                         <button onclick="copyResult()" style="margin-top: 25px; background: none; border: 1px solid var(--primary); color: var(--primary); padding: 8px; border-radius: 5px; cursor: pointer;">Kopier svar</button>
@@ -128,6 +131,37 @@
                         Fyll inn tall for å se kurven.
                     </p>
                 </div>
+
+                <section id="learning-panel" class="glass-panel verktoy-boks">
+                    <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">🎓 Læringsstudio</h3>
+                    <div class="learning-controls">
+                        <div style="flex: 1; min-width: 160px;">
+                            <label for="learning-topic" style="display:block; margin-bottom: 6px; color: #ccc; font-size: 0.9rem;">Velg tema</label>
+                            <select id="learning-topic" onchange="loadLessonCard(); loadQuizQuestion();" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: inherit;">
+                                <option value="Prosent">Prosent</option>
+                                <option value="Algebra">Algebra</option>
+                                <option value="Geometri">Geometri</option>
+                                <option value="Statistikk">Statistikk</option>
+                                <option value="Fysikk">Fysikk</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end; flex: 1; min-width: 220px;">
+                            <button class="action-btn small" onclick="loadLessonCard()">Vis forklaring</button>
+                            <button class="action-btn small" onclick="loadQuizQuestion()">Start oppgave</button>
+                        </div>
+                    </div>
+
+                    <div id="learning-card" class="learning-card">Velg et tema og start med en oppgave eller les en kort forklaring.</div>
+                    <div class="learning-score">Poeng: <span id="quiz-score">0</span> / <span id="quiz-total">0</span> | Riktige: <span id="quiz-correct">0</span></div>
+                    <input type="text" id="quiz-answer" placeholder="Skriv svaret her" style="width: 100%; font-size: 0.95rem; padding: 10px; margin-top: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: inherit;">
+                    <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+                        <button class="action-btn" onclick="checkQuizAnswer()">Sjekk svar</button>
+                        <button class="action-btn" onclick="toggleHint()">Vis hint</button>
+                        <button class="action-btn" onclick="loadQuizQuestion()">Ny oppgave</button>
+                    </div>
+                    <p id="quiz-feedback" style="margin-top: 12px; color: #ccc; min-height: 1.4em;"></p>
+                    <p id="quiz-hint" style="margin-top: 10px; color: var(--primary); font-size: 0.95rem; min-height: 2em; background: rgba(0,0,0,0.12); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); padding: 12px; display: none;"></p>
+                </section>
 
                 <section id="history-panel" class="glass-panel verktoy-boks" style="padding: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
