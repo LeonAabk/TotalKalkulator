@@ -1368,16 +1368,64 @@ const hurtigCanvas = document.getElementById('hurtigCanvas');
 const hurtigCtx = hurtigCanvas.getContext('2d');
 const hurtigInput = document.getElementById('hurtigGrafInput');
 
+let hurtigGraphZoom = 15;
+let hurtigGraphOffsetX = 0;
+
 function tegnHurtigGraf() {
-    const w = hurtigCanvas.width, h = hurtigCanvas.height, s = 15;
+    const w = hurtigCanvas.width, h = hurtigCanvas.height, s = hurtigGraphZoom;
     hurtigCtx.clearRect(0,0,w,h);
     
-    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.2)'; 
+    // Tegn grid bakgrunn
+    hurtigCtx.fillStyle = 'rgba(0,0,0,0.2)';
+    hurtigCtx.fillRect(0, 0, w, h);
+    
+    // Tegn gridlinjer
+    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.1)'; 
     hurtigCtx.lineWidth = 1;
+    for(let i = -5; i <= 5; i++) {
+        if(i !== 0) {
+            let px = w/2 + i*s;
+            hurtigCtx.beginPath();
+            hurtigCtx.moveTo(px, 0); 
+            hurtigCtx.lineTo(px, h);
+            hurtigCtx.stroke();
+        }
+    }
+    for(let i = -3; i <= 3; i++) {
+        if(i !== 0) {
+            let py = h/2 - i*s;
+            hurtigCtx.beginPath();
+            hurtigCtx.moveTo(0, py); 
+            hurtigCtx.lineTo(w, py);
+            hurtigCtx.stroke();
+        }
+    }
+    
+    // Tegn aksene
+    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.4)'; 
+    hurtigCtx.lineWidth = 2;
     hurtigCtx.beginPath();
     hurtigCtx.moveTo(0, h/2); hurtigCtx.lineTo(w, h/2); 
     hurtigCtx.moveTo(w/2, 0); hurtigCtx.lineTo(w/2, h); 
     hurtigCtx.stroke();
+    
+    // Tegn akselabels
+    hurtigCtx.fillStyle = 'rgba(255,255,255,0.5)';
+    hurtigCtx.font = '10px sans-serif';
+    hurtigCtx.textAlign = 'center';
+    for(let i = -2; i <= 2; i++) {
+        if(i !== 0) {
+            let px = w/2 + i*s;
+            hurtigCtx.fillText(i, px, h/2 + 12);
+        }
+    }
+    hurtigCtx.textAlign = 'right';
+    for(let i = -2; i <= 2; i++) {
+        if(i !== 0) {
+            let py = h/2 - i*s;
+            hurtigCtx.fillText(i, w/2 - 8, py + 4);
+        }
+    }
     
     let expr = hurtigInput.value.trim();
     if (!expr) return;
@@ -1387,7 +1435,10 @@ function tegnHurtigGraf() {
                .replace(/sin/g, 'Math.sin')
                .replace(/cos/g, 'Math.cos')
                .replace(/tan/g, 'Math.tan')
-               .replace(/sqrt/g, 'Math.sqrt');
+               .replace(/sqrt/g, 'Math.sqrt')
+               .replace(/abs/g, 'Math.abs')
+               .replace(/log/g, 'Math.log10')
+               .replace(/ln/g, 'Math.log');
                
     const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#ffffff';
     hurtigCtx.strokeStyle = primaryColor;
@@ -1395,24 +1446,39 @@ function tegnHurtigGraf() {
     hurtigCtx.beginPath();
     
     let isDrawing = false;
+    let lastY = null;
     for(let px=0; px<=w; px++) {
         let x = (px - w/2) / s;
         try {
             let y = eval(expr);
             let py = h/2 - y*s;
-            if (isNaN(py) || !isFinite(py)) {
+            if (isNaN(py) || !isFinite(py) || Math.abs(py - (lastY || py)) > 100) {
                 isDrawing = false;
+                lastY = null;
             } else {
                 if(!isDrawing) { hurtigCtx.moveTo(px, py); isDrawing = true; } 
                 else { hurtigCtx.lineTo(px, py); }
+                lastY = py;
             }
         } catch(e) {
-            break;
+            isDrawing = false;
+            lastY = null;
         }
     }
     hurtigCtx.stroke();
 }
+
+// Event listeners for input
 hurtigInput.addEventListener('input', tegnHurtigGraf);
+
+// Mouse wheel zoom for fast-graph
+hurtigCanvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if(e.deltaY < 0) hurtigGraphZoom *= 1.1;
+    else hurtigGraphZoom /= 1.1;
+    hurtigGraphZoom = Math.max(5, Math.min(50, hurtigGraphZoom));
+    tegnHurtigGraf();
+}, {passive: false});
 // =========================================
 // STATISTIKK LOGIKK (SIDE-PANEL)
 // =========================================
@@ -1544,7 +1610,8 @@ function oppdaterSirkel() {
     
     const senterX = canvasSirkel.width / 2;
     const senterY = canvasSirkel.height / 2;
-    const radius = 90; 
+    const radius = 80;
+    const padding = 20;
 
     let grader = parseFloat(vinkelInput.value) || 0;
     let radianer = grader * (Math.PI / 180);
@@ -1560,6 +1627,11 @@ function oppdaterSirkel() {
 
     ctxSirkel.clearRect(0, 0, canvasSirkel.width, canvasSirkel.height);
     
+    // Tegn bakgrunn
+    ctxSirkel.fillStyle = 'rgba(0,0,0,0.1)';
+    ctxSirkel.fillRect(0, 0, canvasSirkel.width, canvasSirkel.height);
+    
+    // Tegn aksene
     ctxSirkel.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctxSirkel.lineWidth = 1;
     ctxSirkel.beginPath();
@@ -1568,28 +1640,117 @@ function oppdaterSirkel() {
     ctxSirkel.moveTo(senterX, 0);
     ctxSirkel.lineTo(senterX, canvasSirkel.height);
     ctxSirkel.stroke();
+    
+    // Tegn kvadrant labels
+    ctxSirkel.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctxSirkel.font = 'bold 11px sans-serif';
+    ctxSirkel.textAlign = 'center';
+    ctxSirkel.fillText('0°', senterX + radius + 15, senterY + 12);
+    ctxSirkel.fillText('90°', senterX - 8, senterY - radius - 8);
+    ctxSirkel.fillText('180°', senterX - radius - 15, senterY + 12);
+    ctxSirkel.fillText('270°', senterX + 8, senterY + radius + 15);
 
+    // Tegn timarks rundt sirkelen
+    for(let deg = 0; deg < 360; deg += 30) {
+        let rad = deg * Math.PI / 180;
+        let x1 = senterX + (radius) * Math.cos(rad);
+        let y1 = senterY - (radius) * Math.sin(rad);
+        let x2 = senterX + (radius + 8) * Math.cos(rad);
+        let y2 = senterY - (radius + 8) * Math.sin(rad);
+        
+        ctxSirkel.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctxSirkel.lineWidth = 1;
+        ctxSirkel.beginPath();
+        ctxSirkel.moveTo(x1, y1);
+        ctxSirkel.lineTo(x2, y2);
+        ctxSirkel.stroke();
+    }
+
+    // Tegn enhetssirkelen
     const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#ffffff';
     ctxSirkel.strokeStyle = primaryColor;
-    ctxSirkel.lineWidth = 2;
+    ctxSirkel.lineWidth = 2.5;
     ctxSirkel.beginPath();
     ctxSirkel.arc(senterX, senterY, radius, 0, 2 * Math.PI);
     ctxSirkel.stroke();
+    
+    // Tegn vinkelarken (fra 0 til gjeldende vinkel)
+    const arcRadius = radius * 0.3;
+    ctxSirkel.strokeStyle = primaryColor;
+    ctxSirkel.lineWidth = 2;
+    ctxSirkel.beginPath();
+    ctxSirkel.arc(senterX, senterY, arcRadius, 0, radianer);
+    ctxSirkel.stroke();
+    
+    // Tegn vinkel-label
+    if(Math.abs(grader) > 5) {
+        const labelDeg = grader / 2;
+        const labelRad = labelDeg * Math.PI / 180;
+        const labelX = senterX + (arcRadius + 15) * Math.cos(labelRad);
+        const labelY = senterY - (arcRadius + 15) * Math.sin(labelRad);
+        ctxSirkel.fillStyle = primaryColor;
+        ctxSirkel.font = '11px sans-serif';
+        ctxSirkel.textAlign = 'center';
+        ctxSirkel.fillText(`${grader.toFixed(0)}°`, labelX, labelY);
+    }
 
-    ctxSirkel.strokeStyle = '#ffffff';
+    // Tegn radiuslinjen (fra senter til punkt)
+    ctxSirkel.strokeStyle = primaryColor;
+    ctxSirkel.lineWidth = 2;
     ctxSirkel.beginPath();
     ctxSirkel.moveTo(senterX, senterY);
     ctxSirkel.lineTo(punktX, punktY);
     ctxSirkel.stroke();
     
+    // Tegn cos-projeksjonen (horisontal)
+    ctxSirkel.strokeStyle = 'rgba(255, 200, 100, 0.6)';
+    ctxSirkel.lineWidth = 1.5;
+    ctxSirkel.setLineDash([4, 4]);
+    ctxSirkel.beginPath();
+    ctxSirkel.moveTo(punktX, senterY);
+    ctxSirkel.lineTo(senterX, senterY);
+    ctxSirkel.lineTo(senterX, punktY);
+    ctxSirkel.stroke();
+    ctxSirkel.setLineDash([]);
+    
+    // Tegn sin og cos som farget linjer
+    // Sin (vertikal)
+    ctxSirkel.strokeStyle = 'rgba(100, 200, 255, 0.7)';
+    ctxSirkel.lineWidth = 2;
+    ctxSirkel.beginPath();
+    ctxSirkel.moveTo(senterX, senterY);
+    ctxSirkel.lineTo(senterX, punktY);
+    ctxSirkel.stroke();
+    ctxSirkel.fillStyle = 'rgba(100, 200, 255, 0.3)';
+    ctxSirkel.fillText('sin', senterX - 15, (senterY + punktY) / 2);
+    
+    // Cos (horisontal)
+    ctxSirkel.strokeStyle = 'rgba(255, 150, 150, 0.7)';
+    ctxSirkel.lineWidth = 2;
+    ctxSirkel.beginPath();
+    ctxSirkel.moveTo(senterX, senterY);
+    ctxSirkel.lineTo(punktX, senterY);
+    ctxSirkel.stroke();
+    ctxSirkel.fillStyle = 'rgba(255, 150, 150, 0.3)';
+    ctxSirkel.fillText('cos', (senterX + punktX) / 2, senterY + 15);
+    
+    // Tegn punktet
     ctxSirkel.fillStyle = primaryColor;
     ctxSirkel.beginPath();
-    ctxSirkel.arc(punktX, punktY, 6, 0, 2 * Math.PI);
+    ctxSirkel.arc(punktX, punktY, 7, 0, 2 * Math.PI);
+    ctxSirkel.fill();
+    
+    // Tegn senter
+    ctxSirkel.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctxSirkel.beginPath();
+    ctxSirkel.arc(senterX, senterY, 3, 0, 2 * Math.PI);
     ctxSirkel.fill();
 }
 
 if (vinkelInput) {
     vinkelInput.addEventListener('input', oppdaterSirkel);
+    // Tegn ved oppstart
+    setTimeout(oppdaterSirkel, 100);
 }
 
 
