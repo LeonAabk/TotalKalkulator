@@ -381,6 +381,13 @@ const calculators = [
         let p = parseFloat(document.getElementById('i1').value), t = parseFloat(document.getElementById('i2').value);
         return { res: (p/100)*t, exp: `(${p}/100) * ${t} = ${(p/100)*t}` };
     }},
+    { id: 70, folder: "Grunnleggende", name: "Prosentendring", formula: "(ny - gammel) / gammel * 100", html: '<input type="number" id="i1" placeholder="Gammel verdi"><input type="number" id="i2" placeholder="Ny verdi">', calc: () => {
+        let oldValue = parseFloat(document.getElementById('i1').value);
+        let newValue = parseFloat(document.getElementById('i2').value);
+        if (isNaN(oldValue) || isNaN(newValue) || oldValue === 0) return { res: "Feil: Ugyldige verdier" };
+        let change = ((newValue - oldValue) / oldValue) * 100;
+        return { res: `${change.toFixed(2)}%`, exp: `(${newValue} - ${oldValue}) / ${oldValue} * 100 = ${change.toFixed(2)}%` };
+    }},
     { id: 2, folder: "Grunnleggende", name: "Deling", formula: "a / b", html: '<input type="number" id="i1" placeholder="a"><input type="number" id="i2" placeholder="b">', calc: () => {
         let a = parseFloat(document.getElementById('i1').value), b = parseFloat(document.getElementById('i2').value);
         return b === 0 ? {res: "Feil: Kan ikke dele på 0"} : { res: a/b, exp: `${a} / ${b} = ${a/b}` };
@@ -809,18 +816,37 @@ const calculators = [
         let c = Math.sqrt(a*a+b*b);
         return { res: `c = ${c.toFixed(2)}`, exp: `√(${a}² + ${b}²) = √(${a*a+b*b}) = ${c.toFixed(2)}` };
     }},
-    { id: 24, folder: "Geometri", name: "Areal Sirkel", formula: "πr²", html: '<input type="number" id="i1" placeholder="r">', calc: () => {
+    { id: 24, folder: "Geometri / Areal", name: "Areal Sirkel", formula: "πr²", html: '<input type="number" id="i1" placeholder="r">', calc: () => {
         let r=parseFloat(document.getElementById('i1').value);
         return { res: (Math.PI*r*r).toFixed(2), exp: `π * ${r}² = ${(Math.PI*r*r).toFixed(2)}` };
     }},
-    { id: 25, folder: "Geometri", name: "Kulevolum", formula: "(4/3)πr³", html: '<input type="number" id="i1" placeholder="r">', calc: () => {
+    { id: 71, folder: "Geometri / Areal", name: "Areal Trekant", formula: "(b * h) / 2", html: '<input type="number" id="i1" placeholder="Grunnlinje (b)"><input type="number" id="i2" placeholder="Høyde (h)">', calc: () => {
+        let b=parseFloat(document.getElementById('i1').value);
+        let h=parseFloat(document.getElementById('i2').value);
+        if (isNaN(b) || isNaN(h)) return { res: "Feil: Fyll inn b og h" };
+        let area = (b * h) / 2;
+        return { res: area.toFixed(2), exp: `(${b} * ${h}) / 2 = ${area.toFixed(2)}` };
+    }},
+    { id: 72, folder: "Geometri / Areal", name: "Omkrets Sirkel", formula: "2πr", html: '<input type="number" id="i1" placeholder="r">', calc: () => {
+        let r=parseFloat(document.getElementById('i1').value);
+        if (isNaN(r)) return { res: "Feil: Fyll inn radius" };
+        let circumference = 2 * Math.PI * r;
+        return { res: circumference.toFixed(2), exp: `2 * π * ${r} = ${circumference.toFixed(2)}` };
+    }},
+    { id: 73, folder: "Geometri / Areal", name: "Overflate Kule", formula: "4πr²", html: '<input type="number" id="i1" placeholder="r">', calc: () => {
+        let r=parseFloat(document.getElementById('i1').value);
+        if (isNaN(r)) return { res: "Feil: Fyll inn radius" };
+        let area = 4 * Math.PI * Math.pow(r, 2);
+        return { res: area.toFixed(2), exp: `4 * π * ${r}² = ${area.toFixed(2)}` };
+    }},
+    { id: 25, folder: "Geometri / Volum", name: "Kulevolum", formula: "(4/3)πr³", html: '<input type="number" id="i1" placeholder="r">', calc: () => {
         let r=parseFloat(document.getElementById('i1').value);
         return { res: ((4/3)*Math.PI*Math.pow(r,3)).toFixed(2), exp: `(4/3)*π*${r}³ = ${((4/3)*Math.PI*Math.pow(r,3)).toFixed(2)}` };
     }},
     // GEOMETRI: Areal av Trapes
     { 
         id: 62, 
-        folder: "Geometri", 
+        folder: "Geometri / Areal", 
         name: "Areal Trapes", 
         formula: "A = ((a + b) / 2) * h", 
         html: '<input type="number" id="i1" placeholder="Side a"><input type="number" id="i2" placeholder="Side b"><input type="number" id="i3" placeholder="Høyde (h)">', 
@@ -837,7 +863,7 @@ const calculators = [
     // GEOMETRI: Volum av Pyramide (Kvadratisk grunnflate)
     { 
         id: 63, 
-        folder: "Geometri", 
+        folder: "Geometri / Volum", 
         name: "Volum Pyramide", 
         formula: "V = (s² * h) / 3", 
         html: '<input type="number" id="i1" placeholder="Sidekant grunnflate (s)"><input type="number" id="i2" placeholder="Høyde (h)">', 
@@ -853,7 +879,7 @@ const calculators = [
     // GEOMETRI: Volum av Kjegle
     { 
         id: 64, 
-        folder: "Geometri", 
+        folder: "Geometri / Volum", 
         name: "Volum Kjegle", 
         formula: "V = (π * r² * h) / 3", 
         html: '<input type="number" id="i1" placeholder="Radius (r)"><input type="number" id="i2" placeholder="Høyde (h)">', 
@@ -869,7 +895,7 @@ const calculators = [
     // GEOMETRI: Overflateareal av Sylinder
     { 
         id: 65, 
-        folder: "Geometri", 
+        folder: "Geometri / Areal", 
         name: "Overflate Sylinder", 
         formula: "A = 2πr² + 2πrh", 
         html: '<input type="number" id="i1" placeholder="Radius (r)"><input type="number" id="i2" placeholder="Høyde (h)">', 
@@ -890,7 +916,7 @@ const calculators = [
     // GEOMETRI: Areal av Rombe / Drage
     { 
         id: 66, 
-        folder: "Geometri", 
+        folder: "Geometri / Areal", 
         name: "Areal Rombe", 
         formula: "A = (p * q) / 2", 
         html: '<input type="number" id="i1" placeholder="Diagonal 1 (p)"><input type="number" id="i2" placeholder="Diagonal 2 (q)">', 
@@ -902,7 +928,7 @@ const calculators = [
             return { res: areal.toFixed(2), exp: `(${p} * ${q}) / 2 = ${areal.toFixed(2)}` };
         }
     },
-    { id: 8, folder: "Geometri", name: "Volum Boks", formula: "l * b * h", html: '<input type="number" id="i1" placeholder="l"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="h">', calc: () => {
+    { id: 8, folder: "Geometri / Volum", name: "Volum Boks", formula: "l * b * h", html: '<input type="number" id="i1" placeholder="l"><input type="number" id="i2" placeholder="b"><input type="number" id="i3" placeholder="h">', calc: () => {
         let l=parseFloat(document.getElementById('i1').value), b=parseFloat(document.getElementById('i2').value), h=parseFloat(document.getElementById('i3').value);
         return { res: l*b*h, exp: `${l} * ${b} * ${h} = ${l*b*h}` };
     }},
@@ -1152,7 +1178,17 @@ const calculators = [
     }},
     { id: 22, folder: "Statistikk", name: "Gjennomsnitt", formula: "Sum / n", html: '<input type="text" id="i1" placeholder="Eks: 2, 4, 6">', calc: () => {
         let arr = document.getElementById('i1').value.split(',').map(Number).filter(x => !isNaN(x));
-        let sum = arr.reduce((a,b)=>a+b,0); return { res: sum/arr.length, exp: `Sum: ${sum}, Antall: ${arr.length}` };
+        if (arr.length === 0) return { res: "Feil: Skriv inn verdier" };
+        let sum = arr.reduce((a,b)=>a+b,0);
+        return { res: (sum/arr.length).toFixed(2), exp: `Sum: ${sum}, Antall: ${arr.length}` };
+    }},
+    { id: 74, folder: "Statistikk", name: "Median", formula: "Midterste verdi", html: '<input type="text" id="i1" placeholder="Eks: 2, 5, 3">', calc: () => {
+        let arr = document.getElementById('i1').value.split(',').map(Number).filter(x => !isNaN(x));
+        if (arr.length === 0) return { res: "Feil: Skriv inn verdier" };
+        arr.sort((a,b) => a-b);
+        let middle = Math.floor(arr.length / 2);
+        let median = arr.length % 2 === 1 ? arr[middle] : ((arr[middle-1] + arr[middle]) / 2);
+        return { res: median.toFixed(2), exp: `Sortert: ${arr.join(', ')}\nMedian: ${median.toFixed(2)}` };
     }},
     { 
         id: 55, 
@@ -1231,7 +1267,7 @@ const calculators = [
     // NY GEOMETRI-FUNKSJON: Volum Sylinder
     { 
         id: 40, 
-        folder: "Geometri", 
+        folder: "Geometri / Volum", 
         name: "Volum Sylinder", 
         formula: "V = πr²h", 
         html: '<input type="number" id="i1" placeholder="Radius (r)"><input type="number" id="i2" placeholder="Høyde (h)">', 
@@ -1450,6 +1486,18 @@ function clearHistory() {
     }
 }
 
+function getTopLevelFolders() {
+    return [...new Set(calculators.map(c => c.folder.split(" / ")[0]))];
+}
+
+function getSubfolders(folderName) {
+    return [...new Set(calculators
+        .map(c => c.folder)
+        .filter(path => path.startsWith(folderName + " / "))
+        .map(path => path.slice((folderName + " / ").length).split(" / ")[0])
+    )];
+}
+
 function renderFolders() {
     folderView.innerHTML = ''; 
     folderView.style.display = 'grid'; 
@@ -1470,7 +1518,7 @@ function renderFolders() {
         folderView.appendChild(favCard);
     }
     
-    const folderNames = [...new Set(calculators.map(c => c.folder))];
+    const folderNames = getTopLevelFolders();
     folderNames.forEach(name => {
         const card = document.createElement('div'); 
         card.className = 'card glass-panel';
@@ -1488,7 +1536,25 @@ function openFolder(name) {
     listView.style.display = 'grid'; 
     listView.innerHTML = '';
     
-    let list = name === "Favoritter" ? calculators.filter(c => favorites.includes(c.id)) : calculators.filter(c => c.folder === name);
+    const folderIcons = { "Favoritter": "⭐", "Grunnleggende": "🧮", "Algebra": "📉", "Geometri": "📐", "Matte": "➕", "Statistikk": "📊", "Fysikk": "🧪", "Økonomi": "💰", "Konvertering": "🔄", "Diverse": "✨" };
+    
+    if (name !== "Favoritter") {
+        const subfolders = getSubfolders(name);
+        subfolders.forEach(sub => {
+            const fullPath = `${name} / ${sub}`;
+            const card = document.createElement('div');
+            card.className = 'card glass-panel';
+            const icon = folderIcons[name.split(' / ')[0]] || "📁";
+            card.innerHTML = `<span style="font-size: 2rem">${icon}</span><br>${sub}`;
+            card.onclick = () => openFolder(fullPath);
+            listView.appendChild(card);
+        });
+    }
+
+    let list = name === "Favoritter"
+        ? calculators.filter(c => favorites.includes(c.id))
+        : calculators.filter(c => c.folder === name);
+
     list.forEach(c => {
         const el = document.createElement('div'); 
         el.className = 'card glass-panel';
