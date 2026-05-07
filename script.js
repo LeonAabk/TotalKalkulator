@@ -177,11 +177,16 @@ function startPracticeMode() {
 function updatePracticeStatus() {
     const accuracy = practiceModeCount > 0 ? ((practiceModeCorrect / practiceModeCount) * 100).toFixed(0) : 0;
     document.getElementById('practice-status').innerHTML = `
-        <div style="padding: 10px; background: rgba(0,255,0,0.1); border-radius: 8px; margin-bottom: 15px;">
-            <strong>Praksis-modus:</strong> ${practiceModeCount} oppgaver | 
-            <span style="color: var(--primary);">${practiceModeCorrect} riktige</span> | 
-            ${accuracy}% nøyaktighet
-            <button class="action-btn small" onclick="endPracticeMode()" style="float: right; margin-top: -5px;">Avslutt praksis</button>
+        <div style="padding: 12px; background: rgba(0,255,0,0.1); border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #00ff00;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <div>
+                    <strong style="color: var(--primary);">🎯 Praksis-modus aktiv:</strong><br>
+                    <span style="font-size: 0.95rem; color: #ccc;">${practiceModeCount} oppgaver | 
+                    <span style="color: var(--primary); font-weight: bold;">${practiceModeCorrect} riktige</span> | 
+                    <span style="color: #00ff00; font-weight: bold;">${accuracy}%</span> nøyaktighet</span>
+                </div>
+                <button class="action-btn small" onclick="endPracticeMode()" style="min-width: 130px;">Avslutt praksis</button>
+            </div>
         </div>
     `;
 }
