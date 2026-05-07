@@ -187,6 +187,18 @@ const learningTopics = {
                     hint: 'Sett x inn og regn ut.',
                     explanation: `${a} * ${x} ${b >= 0 ? '+' + b : b} = ${y}`
                 };
+            },
+            () => {
+                const a = Math.floor(Math.random() * 5) + 1;
+                const c = Math.floor(Math.random() * 21) - 10;
+                const b = Math.floor(Math.random() * 11) - 5;
+                const result = Number(((c - b) / a).toFixed(2));
+                return {
+                    text: `Løs ligningen ${a}x ${b >= 0 ? '+' + b : b} = ${c}. Hva er x?`,
+                    answer: result,
+                    hint: 'Flytt b til andre siden og del på a.',
+                    explanation: `${a}x = ${c - b}, x = ${c - b} / ${a} = ${result}`
+                };
             }
         ]
     },
@@ -316,6 +328,47 @@ const learningTopics = {
                     answer: result,
                     hint: 'Bruk formelen 331.3 + 0.6t.',
                     explanation: `331.3 + 0.6 * ${temp} = ${result}`
+                };
+            }
+        ]
+    },
+    Trigonometri: {
+        label: 'Trigonometri',
+        summary: 'Lær om sinus, cosinus og tangens i rettvinklede trekanter.',
+        lessons: [
+            'I en rettvinklet trekant er sin(θ) = motstående katet / hypotenusen.',
+            'Cos(θ) = tilstøtende katet / hypotenusen.',
+            'Tan(θ) = motstående katet / tilstøtende katet.'
+        ],
+        generators: [
+            () => {
+                const angle = [30, 45, 60][Math.floor(Math.random() * 3)];
+                const sinVal = Math.sin(angle * Math.PI / 180).toFixed(3);
+                return {
+                    text: `Hva er sin(${angle}°)?`,
+                    answer: sinVal,
+                    hint: 'Bruk sinus-tabellen eller kalkulator.',
+                    explanation: `sin(${angle}°) = ${sinVal}`
+                };
+            },
+            () => {
+                const angle = [30, 45, 60][Math.floor(Math.random() * 3)];
+                const cosVal = Math.cos(angle * Math.PI / 180).toFixed(3);
+                return {
+                    text: `Hva er cos(${angle}°)?`,
+                    answer: cosVal,
+                    hint: 'Bruk cosinus-tabellen eller kalkulator.',
+                    explanation: `cos(${angle}°) = ${cosVal}`
+                };
+            },
+            () => {
+                const angle = [30, 45, 60][Math.floor(Math.random() * 3)];
+                const tanVal = Math.tan(angle * Math.PI / 180).toFixed(3);
+                return {
+                    text: `Hva er tan(${angle}°)?`,
+                    answer: tanVal,
+                    hint: 'Bruk tangens-tabellen eller kalkulator.',
+                    explanation: `tan(${angle}°) = ${tanVal}`
                 };
             }
         ]
@@ -1402,6 +1455,7 @@ function renderFolders() {
     folderView.style.display = 'grid'; 
     listView.style.display = 'none'; 
     calcView.style.display = 'none'; 
+    document.getElementById('learning-view').style.display = 'none';
     historyPanel.style.display = 'block';
     document.getElementById('hurtig-graf-panel').style.display = 'block';
     document.getElementById('enhetssirkel-panel').style.display = 'block';
@@ -1458,6 +1512,7 @@ function openCalc(c) {
     currentGraphFunc = null;
     listView.style.display = 'none'; 
     calcView.style.display = 'block';
+    document.getElementById('learning-view').style.display = 'none';
     
     if (window.innerWidth <= 800) {
         document.getElementById('hurtig-graf-panel').style.display = 'none';
@@ -1477,6 +1532,19 @@ function openCalc(c) {
 function showHome() { 
     searchBar.value = ''; 
     renderFolders(); 
+}
+
+function showLearningStudio() {
+    // Hide other views
+    document.getElementById('folder-view').style.display = 'none';
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('calc-view').style.display = 'none';
+    document.getElementById('learning-view').style.display = 'none';
+    // Show learning view
+    document.getElementById('learning-view').style.display = 'block';
+    // Load initial content
+    loadLessonCard();
+    loadQuizQuestion();
 }
 
 async function executeCalc() {
@@ -1585,11 +1653,18 @@ function getSelectedLearningTopic() {
 function loadLessonCard() {
     const topic = learningTopics[getSelectedLearningTopic()];
     if (!topic) return;
-    studyCardIndex = (studyCardIndex + 1) % topic.lessons.length;
+    
+    let lessonsHtml = '<h3 style="color: var(--primary); margin-bottom: 15px;">📚 Leksjoner</h3>';
+    topic.lessons.forEach((lesson, index) => {
+        lessonsHtml += `<p style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--primary);">${index + 1}. ${lesson}</p>`;
+    });
+    
     document.getElementById('learning-card').innerHTML = `
-        <strong>${topic.label}</strong>
-        <p style="margin-top: 10px; color: #ccc; line-height: 1.6;">${topic.summary}</p>
-        <p style="margin-top: 14px; font-weight: 600;">${topic.lessons[studyCardIndex]}</p>
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: var(--primary); margin-bottom: 10px;">📖 Om ${topic.label}</h3>
+            <p style="color: #ccc; line-height: 1.5;">${topic.summary}</p>
+        </div>
+        ${lessonsHtml}
     `;
 }
 
@@ -1597,6 +1672,17 @@ function renderLearningStats() {
     document.getElementById('quiz-score').innerText = quizCorrect;
     document.getElementById('quiz-total').innerText = quizTotal;
     document.getElementById('quiz-correct').innerText = quizCorrect;
+    
+    const progressPercent = quizTotal > 0 ? (quizCorrect / quizTotal) * 100 : 0;
+    document.getElementById('progress-fill').style.width = progressPercent + '%';
+}
+
+function resetQuizScore() {
+    quizCorrect = 0;
+    quizTotal = 0;
+    renderLearningStats();
+    document.getElementById('quiz-feedback').innerText = 'Poeng nullstilt!';
+    setTimeout(() => document.getElementById('quiz-feedback').innerText = '', 2000);
 }
 
 function createQuizQuestion() {
