@@ -1564,9 +1564,9 @@ const calculators = [
         <div style="text-align: left; padding: 10px; color: #ccc; line-height: 1.6;">
             <p style="margin-bottom: 15px;">Dette er et komplett, web-basert matematikkverktøy utviklet av <b style="color: var(--primary);">Leon Aabak</b>.</p>
             <ul style="margin-bottom: 15px; padding-left: 20px;">
-                <li style="margin-bottom: 8px;"><b>55 Funksjoner:</b> Alt fra prosent til trigonometri og Trekantløser.</li>
-                <li style="margin-bottom: 8px;"><b>Valuta i sanntid:</b> Hent oppdaterte kurser direkte fra nettet.</li>
-                <li style="margin-bottom: 8px;"><b>Avansert Grafmotor:</b> Tegn grafer med interaktiv zoom og panorering.</li>
+                <li style="margin-bottom: 8px;"><b>80+ Funksjoner:</b> Alt fra prosent til algebra og Trekantløser.</li>
+                <li style="margin-bottom: 8px;"><b>Valuta i sanntid:</b> Henter oppdaterte kurser direkte fra nettet.</li>
+                <li style="margin-bottom: 8px;"><b>Avansert Grafmotor:</b> Tegner grafer med interaktiv zoom og panorering.</li>
                 <li><b>Enhetssirkel:</b> Visuell og dynamisk forståelse av trigonometri.</li>
             </ul>
             <p style="font-size: 0.9rem; color: var(--text-muted);">
