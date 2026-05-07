@@ -98,6 +98,100 @@ let quizTotal = 0;
 let quizCorrect = 0;
 let currentHintVisible = false;
 
+// ========== NYE LÆRINGSSYSTEMER ==========
+// 1. VANSKELIGHETSGRADER
+let currentDifficulty = 'easy'; // easy, medium, hard
+let practiceMode = false;
+let practiceModeCount = 0;
+let practiceModeCorrect = 0;
+
+// 2. LÆRINGSVEIER - Hvilke temaer bygger på hverandre
+const learningPaths = {
+    'Grunnleggende': [],
+    'Prosent': ['Grunnleggende'],
+    'Algebra': ['Grunnleggende', 'Prosent'],
+    'Geometri': ['Grunnleggende'],
+    'Statistikk': ['Grunnleggende', 'Prosent'],
+    'Trigonometri': ['Geometri'],
+    'Fysikk': ['Algebra', 'Geometri']
+};
+
+// 3. LOKAL ANALYSE - Spor progresjon per tema
+let learningAnalytics = safeParseJSON(localStorage.getItem('calcAnalytics'), {}) || {};
+
+function initializeAnalytics() {
+    Object.keys(learningTopics).forEach(topic => {
+        if (!learningAnalytics[topic]) {
+            learningAnalytics[topic] = {
+                totalAttempts: 0,
+                correctAnswers: 0,
+                difficulty: { easy: 0, medium: 0, hard: 0 },
+                correctByDifficulty: { easy: 0, medium: 0, hard: 0 },
+                difficulty_scores: { easy: 0, medium: 0, hard: 0 },
+                last_attempted: null,
+                streak: 0,
+                difficult_questions: []
+            };
+        }
+    });
+    saveAnalytics();
+}
+
+function saveAnalytics() {
+    localStorage.setItem('calcAnalytics', JSON.stringify(learningAnalytics));
+}
+
+// 4. GJENTAKING-SYSTEM - Spor vanskelige spørsmål
+function addToDifficultQuestions(topic, quiz, wasCorrect) {
+    if (!learningAnalytics[topic]) return;
+    
+    if (!wasCorrect || Math.random() < 0.3) {
+        const existing = learningAnalytics[topic].difficult_questions.find(q => q.text === quiz.text);
+        if (existing) {
+            existing.attempts++;
+            if (!wasCorrect) existing.failures++;
+        } else {
+            learningAnalytics[topic].difficult_questions.push({
+                text: quiz.text,
+                answer: quiz.answer,
+                attempts: 1,
+                failures: !wasCorrect ? 1 : 0,
+                added: new Date().toISOString()
+            });
+        }
+    }
+    learningAnalytics[topic].difficult_questions = learningAnalytics[topic].difficult_questions.slice(0, 10);
+    saveAnalytics();
+}
+
+// 5. PRAKSIS-MODUS
+function startPracticeMode() {
+    practiceMode = true;
+    practiceModeCount = 0;
+    practiceModeCorrect = 0;
+    loadQuizQuestion();
+    document.getElementById('practice-status').style.display = 'block';
+    updatePracticeStatus();
+}
+
+function updatePracticeStatus() {
+    const accuracy = practiceModeCount > 0 ? ((practiceModeCorrect / practiceModeCount) * 100).toFixed(0) : 0;
+    document.getElementById('practice-status').innerHTML = `
+        <div style="padding: 10px; background: rgba(0,255,0,0.1); border-radius: 8px; margin-bottom: 15px;">
+            <strong>Praksis-modus:</strong> ${practiceModeCount} oppgaver | 
+            <span style="color: var(--primary);">${practiceModeCorrect} riktige</span> | 
+            ${accuracy}% nøyaktighet
+            <button class="action-btn small" onclick="endPracticeMode()" style="float: right; margin-top: -5px;">Avslutt praksis</button>
+        </div>
+    `;
+}
+
+function endPracticeMode() {
+    practiceMode = false;
+    document.getElementById('practice-status').style.display = 'none';
+    document.getElementById('quiz-feedback').innerText = `Praksis-modus avsluttet! Du svarte riktig på ${practiceModeCorrect}/${practiceModeCount} oppgaver.`;
+}
+
 const learningTopics = {
     Prosent: {
         label: 'Prosent',
@@ -374,6 +468,9 @@ const learningTopics = {
         ]
     }
 };
+
+// Initialiser analytics når learningTopics er definert
+initializeAnalytics();
 
 const calculators = [
     // GRUNNLEGGENDE (5)
@@ -1722,15 +1819,22 @@ function loadLessonCard() {
     
     let lessonsHtml = '<h3 style="color: var(--primary); margin-bottom: 15px;">📚 Leksjoner</h3>';
     topic.lessons.forEach((lesson, index) => {
-        lessonsHtml += `<p style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--primary);">${index + 1}. ${lesson}</p>`;
+        lessonsHtml += `<p style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--primary);">
+            <strong>${index + 1}.</strong> ${lesson}
+        </p>`;
     });
     
     document.getElementById('learning-card').innerHTML = `
         <div style="margin-bottom: 20px;">
             <h3 style="color: var(--primary); margin-bottom: 10px;">📖 Om ${topic.label}</h3>
-            <p style="color: #ccc; line-height: 1.5;">${topic.summary}</p>
+            <p style="color: #ccc; line-height: 1.6; font-size: 1.05rem;">${topic.summary}</p>
         </div>
         ${lessonsHtml}
+        <div style="margin-top: 15px; padding: 15px; background: rgba(0,150,255,0.08); border-radius: 8px; border-left: 4px solid #0096ff;">
+            <p style="font-size: 0.95rem; color: #ccc; line-height: 1.5;">
+                💡 <strong>Tips:</strong> Disse leksjonene bygger på hverandre. Start med den første og arbeid deg oppover!
+            </p>
+        </div>
     `;
 }
 
@@ -1751,9 +1855,183 @@ function resetQuizScore() {
     setTimeout(() => document.getElementById('quiz-feedback').innerText = '', 2000);
 }
 
+// FUNKSJON: Vis detaljert progresjonstatistikk
+function showLearningAnalytics() {
+    const topic = getSelectedLearningTopic();
+    const stats = learningAnalytics[topic];
+    
+    if (!stats || stats.totalAttempts === 0) {
+        alert('Ingen data ennå. Løs oppgaver for å se statistikk!');
+        return;
+    }
+    
+    const accuracy = ((stats.correctAnswers / stats.totalAttempts) * 100).toFixed(1);
+    const easyAccuracy = stats.difficulty.easy > 0 ? ((stats.correctByDifficulty.easy / stats.difficulty.easy) * 100).toFixed(0) : '-';
+    const mediumAccuracy = stats.difficulty.medium > 0 ? ((stats.correctByDifficulty.medium / stats.difficulty.medium) * 100).toFixed(0) : '-';
+    const hardAccuracy = stats.difficulty.hard > 0 ? ((stats.correctByDifficulty.hard / stats.difficulty.hard) * 100).toFixed(0) : '-';
+    
+    const lastAttempt = stats.last_attempted ? new Date(stats.last_attempted).toLocaleString('no-NO') : 'Aldri';
+    
+    const analyticsHTML = `
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">📊 Din progresjon i ${learningTopics[topic].label}</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="background: rgba(0,255,0,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #00ff00;">
+                    <div style="font-size: 0.9rem; color: #aaa;">Samlet nøyaktighet</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">${accuracy}%</div>
+                    <div style="font-size: 0.85rem; color: #999;">Basert på ${stats.totalAttempts} forsøk</div>
+                </div>
+                
+                <div style="background: rgba(0,150,255,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #0096ff;">
+                    <div style="font-size: 0.9rem; color: #aaa;">Streke</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">${stats.streak}</div>
+                    <div style="font-size: 0.85rem; color: #999;">Siste riktige svar på rad</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">Nøyaktighet etter vanskelighetsgrad:</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div style="background: rgba(0,255,0,0.08); padding: 10px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 0.8rem; color: #999;">Lett (🟢)</div>
+                        <div style="font-size: 1.3rem; font-weight: bold;">${easyAccuracy}%</div>
+                    </div>
+                    <div style="background: rgba(255,200,0,0.08); padding: 10px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 0.8rem; color: #999;">Middels (🟡)</div>
+                        <div style="font-size: 1.3rem; font-weight: bold;">${mediumAccuracy}%</div>
+                    </div>
+                    <div style="background: rgba(255,0,0,0.08); padding: 10px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 0.8rem; color: #999;">Vanskelig (🔴)</div>
+                        <div style="font-size: 1.3rem; font-weight: bold;">${hardAccuracy}%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border-left: 2px solid var(--primary);">
+                <div style="font-size: 0.85rem; color: #999;">Sist forsøkt: ${lastAttempt}</div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('learning-card').innerHTML = analyticsHTML;
+}
+
+// FUNKSJON: Vis læringsveier
+function showLearningPaths() {
+    const topic = getSelectedLearningTopic();
+    const prerequisites = learningPaths[topic] || [];
+    const topicData = learningTopics[topic];
+    
+    let pathsHTML = `
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">🎯 Læringsveier for ${topicData.label}</h3>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ccc; margin-bottom: 10px;">📚 Forutsetninger:</h4>
+    `;
+    
+    if (prerequisites.length === 0) {
+        pathsHTML += `<p style="color: #999; font-style: italic;">Dette er et grunnleggande tema - ingen forutsetninger!</p>`;
+    } else {
+        prerequisites.forEach(prereq => {
+            const stats = learningAnalytics[prereq];
+            const completed = stats && stats.totalAttempts > 0;
+            const accuracy = completed ? ((stats.correctAnswers / stats.totalAttempts) * 100).toFixed(0) : 0;
+            const statusEmoji = completed ? '✅' : '⬜';
+            pathsHTML += `
+                <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid ${completed ? 'var(--primary)' : '#666'};">
+                    ${statusEmoji} ${learningTopics[prereq]?.label || prereq}
+                    ${completed ? `<span style="color: var(--primary);">(${accuracy}%)</span>` : ''}
+                </div>
+            `;
+        });
+    }
+    
+    pathsHTML += `</div>`;
+    
+    // Vis relaterte temaer
+    const relatedTopics = Object.keys(learningPaths).filter(t => learningPaths[t].includes(topic));
+    if (relatedTopics.length > 0) {
+        pathsHTML += `
+            <div>
+                <h4 style="color: #ccc; margin-bottom: 10px;">📖 Neste steg:</h4>
+        `;
+        relatedTopics.forEach(nextTopic => {
+            pathsHTML += `
+                <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid var(--secondary);">
+                    🔜 ${learningTopics[nextTopic]?.label || nextTopic}
+                </div>
+            `;
+        });
+        pathsHTML += `</div>`;
+    }
+    
+    pathsHTML += `</div>`;
+    document.getElementById('learning-card').innerHTML = pathsHTML;
+}
+
+// FUNKSJON: Sett vanskelighetsgrad
+function setQuizDifficulty(level) {
+    currentDifficulty = level;
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+// FUNKSJON: Vis vanskelige spørsmål som trengs repetisjon
+function showDifficultQuestions() {
+    const topic = getSelectedLearningTopic();
+    const difficult = learningAnalytics[topic]?.difficult_questions || [];
+    
+    if (difficult.length === 0) {
+        document.getElementById('learning-card').innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">✨ Ingen vanskelige spørsmål - du klarer deg bra!</p>';
+        return;
+    }
+    
+    let html = `
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">🔄 Spørsmål som trenger repetisjon</h3>
+            <p style="color: #999; margin-bottom: 15px;">Disse spørsmålene har du eller klientene dine slitt med før:</p>
+    `;
+    
+    difficult.forEach((q, idx) => {
+        const added = new Date(q.added).toLocaleDateString('no-NO');
+        html += `
+            <div style="background: rgba(255,100,0,0.08); padding: 12px; border-radius: 8px; border-left: 3px solid #ff6400; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <strong style="color: #ccc;">🔹 ${q.text}</strong>
+                        <div style="font-size: 0.85rem; color: #999; margin-top: 5px;">
+                            Forsøk: ${q.attempts} | Feil: ${q.failures} | Lagt til: ${added}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    document.getElementById('learning-card').innerHTML = html;
+}
+
 function createQuizQuestion() {
     const topicName = getSelectedLearningTopic();
     const topic = learningTopics[topicName] || learningTopics.Prosent;
+    
+    // VANSKELIGHETSGRADER: Bruk vanskelighets-spørsmål hvis det finnes vanskelige
+    if (currentDifficulty === 'hard' && learningAnalytics[topicName]?.difficult_questions?.length > 0 && Math.random() < 0.4) {
+        const difficultQ = learningAnalytics[topicName].difficult_questions[Math.floor(Math.random() * learningAnalytics[topicName].difficult_questions.length)];
+        return {
+            text: difficultQ.text,
+            answer: difficultQ.answer,
+            hint: 'Du har fått denne feil før. Prøv å tenk gjennom stegene.',
+            explanation: 'Gjentakingsspørsmål',
+            isDifficult: true
+        };
+    }
+    
     const generator = topic.generators[Math.floor(Math.random() * topic.generators.length)];
     return generator();
 }
@@ -1761,8 +2039,13 @@ function createQuizQuestion() {
 function loadQuizQuestion() {
     currentQuiz = createQuizQuestion();
     const topic = learningTopics[getSelectedLearningTopic()];
+    const difficultyEmoji = currentDifficulty === 'easy' ? '🟢' : currentDifficulty === 'medium' ? '🟡' : '🔴';
+    
     document.getElementById('learning-card').innerHTML = `
-        <strong>${topic.label} - Oppgave</strong>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <strong>${topic.label} - Oppgave</strong>
+            <span style="font-size: 1.2rem;" title="Vanskelighetsgrad">${difficultyEmoji}</span>
+        </div>
         <p style="margin-top: 10px; color: #ccc; line-height: 1.6;">${currentQuiz.text}</p>
     `;
     document.getElementById('quiz-feedback').innerText = 'Skriv inn svaret og trykk Sjekk svar.';
@@ -1793,12 +2076,16 @@ function toggleHint() {
 function checkQuizAnswer() {
     const answerEl = document.getElementById('quiz-answer');
     const feedback = document.getElementById('quiz-feedback');
+    const topicName = getSelectedLearningTopic();
+    
     if (!currentQuiz) {
         feedback.innerText = 'Trykk på Ny oppgave først.';
         return;
     }
+    
     const guess = answerEl.value.trim().replace(',', '.');
     const guessNum = Number(guess);
+    
     if (guess === '' || isNaN(guessNum)) {
         feedback.innerText = 'Skriv inn et gyldig tall.';
         return;
@@ -1806,12 +2093,41 @@ function checkQuizAnswer() {
 
     quizTotal += 1;
     const diff = Math.abs(guessNum - Number(currentQuiz.answer));
-    if (diff <= 0.1) {
+    const wasCorrect = diff <= 0.1;
+    
+    // ANALYTICS: Registrer svaret
+    if (!learningAnalytics[topicName]) initializeAnalytics();
+    learningAnalytics[topicName].totalAttempts++;
+    learningAnalytics[topicName].difficulty[currentDifficulty]++;
+    learningAnalytics[topicName].last_attempted = new Date().toISOString();
+    
+    if (wasCorrect) {
         quizCorrect += 1;
-        feedback.innerText = `Riktig! ${currentQuiz.explanation}`;
+        learningAnalytics[topicName].correctAnswers++;
+        learningAnalytics[topicName].correctByDifficulty[currentDifficulty]++;
+        learningAnalytics[topicName].streak++;
+        feedback.innerText = `✅ Riktig! ${currentQuiz.explanation}`;
+        
+        if (practiceMode) {
+            practiceModeCorrect++;
+            practiceModeCount++;
+            updatePracticeStatus();
+            setTimeout(() => loadQuizQuestion(), 1500);
+        }
     } else {
-        feedback.innerText = `Nesten! Riktig svar er ${currentQuiz.answer}. ${currentQuiz.explanation}`;
+        learningAnalytics[topicName].streak = 0;
+        feedback.innerText = `❌ Nesten! Riktig svar er ${currentQuiz.answer}. ${currentQuiz.explanation}`;
+        
+        if (practiceMode) {
+            practiceModeCount++;
+            updatePracticeStatus();
+            setTimeout(() => loadQuizQuestion(), 2000);
+        }
     }
+    
+    // GJENTAKING: Legg til vanskelige spørsmål
+    addToDifficultQuestions(topicName, currentQuiz, wasCorrect);
+    saveAnalytics();
     renderLearningStats();
 }
 

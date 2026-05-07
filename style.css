@@ -594,6 +594,43 @@ canvas {
     border: 0;
 }
 
+/* --- DIFFICULTY BUTTONS --- */
+.difficulty-btn {
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: 2px solid;
+    background: rgba(255, 255, 255, 0.05);
+    color: inherit;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+.difficulty-btn.active {
+    opacity: 1;
+    box-shadow: 0 0 15px currentColor;
+}
+
+/* --- LEARNING ANALYTICS STYLES --- */
+#practice-status {
+    padding: 10px;
+    background: rgba(0, 255, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #00ff00;
+}
+
+.learning-card {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
 /* --- ANIMASJONER OG OVERGANGER --- */
 #folder-view, #list-view, #calc-view {
     animation: fadeIn 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);

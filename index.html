@@ -100,10 +100,23 @@
                             </select>
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: flex-end; flex: 1; min-width: 250px;">
-                            <button class="action-btn small" onclick="loadLessonCard()">📖 Vis forklaring</button>
-                            <button class="action-btn small" onclick="loadQuizQuestion()">🧠 Start oppgave</button>
+                            <button class="action-btn small" onclick="loadLessonCard()">📖 Forklaring</button>
+                            <button class="action-btn small" onclick="loadQuizQuestion()">🧠 Oppgave</button>
                         </div>
                     </div>
+
+                    <!-- VANSKELIGHETSGRAD VELGER -->
+                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                        <div style="font-size: 0.9rem; color: #999; margin-bottom: 8px;">Vanskelighetsgrad:</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="difficulty-btn active" onclick="setQuizDifficulty('easy'); loadQuizQuestion();" style="padding: 8px 15px; border-radius: 6px; border: 2px solid #00ff00; background: rgba(0,255,0,0.1); color: inherit; cursor: pointer; font-weight: 500;">🟢 Lett</button>
+                            <button class="difficulty-btn" onclick="setQuizDifficulty('medium'); loadQuizQuestion();" style="padding: 8px 15px; border-radius: 6px; border: 2px solid #ffcc00; background: rgba(255,200,0,0.1); color: inherit; cursor: pointer; font-weight: 500;">🟡 Middels</button>
+                            <button class="difficulty-btn" onclick="setQuizDifficulty('hard'); loadQuizQuestion();" style="padding: 8px 15px; border-radius: 6px; border: 2px solid #ff6600; background: rgba(255,100,0,0.1); color: inherit; cursor: pointer; font-weight: 500;">🔴 Vanskelig</button>
+                        </div>
+                    </div>
+
+                    <!-- PRAKSIS-STATUS (skjult som standard) -->
+                    <div id="practice-status" style="display: none;"></div>
 
                     <div id="learning-card" class="learning-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; min-height: 200px; display: block; text-align: left;"></div>
                     
@@ -112,13 +125,21 @@
                     <div class="progress-bar" style="width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; margin-bottom: 20px; overflow: hidden;">
                         <div id="progress-fill" style="height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease;"></div>
                     </div>
+
+                    <!-- ANALYSE OG MODUS KNAPPER -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <button class="action-btn small" onclick="startPracticeMode()" style="flex: 1; min-width: 120px;">🎯 Praksis-modus</button>
+                        <button class="action-btn small" onclick="showLearningAnalytics()" style="flex: 1; min-width: 120px;">📊 Min progresjon</button>
+                        <button class="action-btn small" onclick="showLearningPaths()" style="flex: 1; min-width: 120px;">🗺️ Læringsveier</button>
+                        <button class="action-btn small" onclick="showDifficultQuestions()" style="flex: 1; min-width: 120px;">🔄 Repetisjon</button>
+                    </div>
                     
                     <div class="quiz-section" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
                         <input type="text" id="quiz-answer" placeholder="Skriv svaret her" style="width: 100%; font-size: 1.1rem; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: inherit; margin-bottom: 15px;">
                         <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
                             <button class="action-btn small" onclick="checkQuizAnswer()">✅ Sjekk svar</button>
-                            <button class="action-btn small" onclick="toggleHint()">💡 Vis hint</button>
-                            <button class="action-btn small" onclick="loadQuizQuestion()">🔄 Ny oppgave</button>
+                            <button class="action-btn small" onclick="toggleHint()">💡 Hint</button>
+                            <button class="action-btn small" onclick="loadQuizQuestion()">🔄 Ny</button>
                         </div>
                         <p id="quiz-feedback" style="color: #ccc; min-height: 1.5em; font-size: 1rem; margin-bottom: 10px;"></p>
                         <p id="quiz-hint" style="color: var(--primary); font-size: 1rem; background: rgba(0,0,0,0.12); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); padding: 15px; display: none;"></p>
