@@ -1690,14 +1690,17 @@ function openFolder(name) {
         ? calculators.filter(c => favorites.includes(c.id))
         : calculators.filter(c => c.folder === name);
 
-    list.forEach(c => {
+    list.forEach((c, index) => {
         const isFav = favorites.includes(c.id);
         html += `
-            <div class="card glass-panel" onclick="openCalc(calculators.find(calc => calc.id === ${c.id}))">
+            <div class="card glass-panel" onclick="openCalcByIndex(${index}, '${name === 'Favoritter' ? 'favorites' : 'regular'}')">
                 <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${c.id}, event)">★</button> ${c.name}
             </div>
         `;
     });
+    
+    // Store the current list for openCalcByIndex to access
+    window.currentCalcList = list;
     
     listView.innerHTML = html;
 
@@ -1707,6 +1710,13 @@ function toggleFav(id, e) {
     else favorites.push(id);
     localStorage.setItem('calcFavorites', JSON.stringify(favorites)); 
     openFolder(currentFolder);
+}
+
+function openCalcByIndex(index, type) {
+    const c = window.currentCalcList[index];
+    if (c) {
+        openCalc(c);
+    }
 }
 
 function openCalc(c) {
