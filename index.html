@@ -152,8 +152,13 @@
                 
                 <div id="hurtig-graf-panel" class="glass-panel verktoy-boks">
                     <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">📉 Hurtig-Graf</h3>
-                    <input type="text" id="hurtigGrafInput" placeholder="f.eks. x*x - 4" style="margin-bottom: 10px; padding: 8px; font-family: monospace;">
-                    <canvas id="hurtigCanvas" width="250" height="150" style="background: #000; border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1);"></canvas>
+                    <input type="text" id="hurtigGrafInput" placeholder="f.eks. x^2 - 4 eller sin(x)" style="margin-bottom: 10px; padding: 8px; font-family: monospace;">
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                        <button class="action-btn small" id="hurtig-reset-btn" type="button">🔄 Nullstill</button>
+                        <span style="flex:1; font-size:0.85rem; color:#ccc; align-self:center; min-width:0;">Musehjul zoom, dra for pan og hold over grafen for koordinater.</span>
+                    </div>
+                    <canvas id="hurtigCanvas" width="250" height="150" style="background: #000; border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1); touch-action: none; cursor: grab;"></canvas>
+                    <p id="hurtig-status" style="font-size:0.82rem; color:#ccc; margin-top: 10px; min-height:1.5em;"></p>
                 </div>
 
                 <div id="enhetssirkel-panel" class="glass-panel verktoy-boks">

@@ -2304,11 +2304,73 @@ canvas.addEventListener('wheel', (e) => {
 const hurtigCanvas = document.getElementById('hurtigCanvas');
 const hurtigCtx = hurtigCanvas.getContext('2d');
 const hurtigInput = document.getElementById('hurtigGrafInput');
+const hurtigStatus = document.getElementById('hurtig-status');
+const hurtigResetBtn = document.getElementById('hurtig-reset-btn');
 
 let hurtigGraphZoom = 15;
 let hurtigGraphOffsetX = 0;
+let hurtigGraphOffsetY = 0;
+let hurtigGraphDragging = false;
+let hurtigGraphLastPointer = { x: 0, y: 0 };
+let hurtigGraphFunction = null;
+
+const hurtigAllowedNames = new Set([
+    'x', 'pi', 'e', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
+    'sqrt', 'abs', 'log', 'ln', 'exp', 'pow', 'max', 'min',
+    'floor', 'ceil', 'round'
+]);
+
+function parseHurtigExpression(rawExpr) {
+    let expr = rawExpr.trim();
+    if (!expr) return { error: 'Skriv en funksjon for å se grafen.' };
+
+    expr = expr.replace(/\^/g, '**');
+
+    const words = expr.match(/\b[A-Za-z_][A-Za-z0-9_]*\b/g) || [];
+    for (const word of words) {
+        const lower = word.toLowerCase();
+        if (/^\d+$/.test(word)) continue;
+        if (!hurtigAllowedNames.has(lower)) {
+            return { error: `Ugyldig funksjonsnavn eller variabel: ${word}.` };
+        }
+    }
+
+    expr = expr.replace(/\bx\b/g, '(x)')
+               .replace(/\bpi\b/gi, 'Math.PI')
+               .replace(/\be\b/gi, 'Math.E')
+               .replace(/\basin\b/gi, 'Math.asin')
+               .replace(/\bacos\b/gi, 'Math.acos')
+               .replace(/\batan\b/gi, 'Math.atan')
+               .replace(/\bsin\b/gi, 'Math.sin')
+               .replace(/\bcos\b/gi, 'Math.cos')
+               .replace(/\btan\b/gi, 'Math.tan')
+               .replace(/\bsqrt\b/gi, 'Math.sqrt')
+               .replace(/\babs\b/gi, 'Math.abs')
+               .replace(/\blog\b/gi, 'Math.log10')
+               .replace(/\bln\b/gi, 'Math.log')
+               .replace(/\bexp\b/gi, 'Math.exp')
+               .replace(/\bpow\b/gi, 'Math.pow')
+               .replace(/\bmax\b/gi, 'Math.max')
+               .replace(/\bmin\b/gi, 'Math.min')
+               .replace(/\bfloor\b/gi, 'Math.floor')
+               .replace(/\bceil\b/gi, 'Math.ceil')
+               .replace(/\bround\b/gi, 'Math.round');
+
+    if (/[^0-9A-Za-z()+\-*/%^., _]/.test(expr)) {
+        return { error: 'Ugyldige tegn i funksjonen. Bruk tall, x og vanlige funksjoner.' };
+    }
+
+    try {
+        const fn = new Function('x', '"use strict"; const sin=Math.sin, cos=Math.cos, tan=Math.tan, asin=Math.asin, acos=Math.acos, atan=Math.atan, sqrt=Math.sqrt, abs=Math.abs, log=Math.log10, ln=Math.log, exp=Math.exp, pow=Math.pow, max=Math.max, min=Math.min, floor=Math.floor, ceil=Math.ceil, round=Math.round, pi=Math.PI, e=Math.E; return ' + expr + ';');
+        return { fn };
+    } catch (parseError) {
+        return { error: 'Kunne ikke tolke funksjonen. Sjekk syntaksen.' };
+    }
+}
 
 function tegnHurtigGraf() {
+    if (!hurtigCanvas || !hurtigCtx) return;
+
     const rect = hurtigCanvas.getBoundingClientRect();
     const w = Math.max(160, Math.round(rect.width));
     const h = Math.max(120, Math.round(rect.height));
@@ -2319,118 +2381,204 @@ function tegnHurtigGraf() {
     hurtigCanvas.style.height = `${h}px`;
     hurtigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     hurtigCtx.clearRect(0, 0, w, h);
-    
+
+    const originX = w / 2 + hurtigGraphOffsetX;
+    const originY = h / 2 + hurtigGraphOffsetY;
+
     hurtigCtx.fillStyle = 'rgba(6, 10, 16, 0.95)';
     hurtigCtx.fillRect(0, 0, w, h);
-    
-    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.12)'; 
+
+    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.12)';
     hurtigCtx.lineWidth = 1;
     hurtigCtx.setLineDash([3, 3]);
-    for(let i = -5; i <= 5; i++) {
-        if(i !== 0) {
-            let px = w/2 + i*hurtigGraphZoom;
-            hurtigCtx.beginPath();
-            hurtigCtx.moveTo(px, 0); 
-            hurtigCtx.lineTo(px, h);
-            hurtigCtx.stroke();
-        }
+
+    for (let i = -10; i <= 10; i++) {
+        if (i === 0) continue;
+        const px = originX + i * hurtigGraphZoom;
+        if (px < -hurtigGraphZoom || px > w + hurtigGraphZoom) continue;
+        hurtigCtx.beginPath();
+        hurtigCtx.moveTo(px, 0);
+        hurtigCtx.lineTo(px, h);
+        hurtigCtx.stroke();
     }
-    for(let i = -3; i <= 3; i++) {
-        if(i !== 0) {
-            let py = h/2 - i*hurtigGraphZoom;
-            hurtigCtx.beginPath();
-            hurtigCtx.moveTo(0, py); 
-            hurtigCtx.lineTo(w, py);
-            hurtigCtx.stroke();
-        }
+
+    for (let i = -6; i <= 6; i++) {
+        if (i === 0) continue;
+        const py = originY - i * hurtigGraphZoom;
+        if (py < -hurtigGraphZoom || py > h + hurtigGraphZoom) continue;
+        hurtigCtx.beginPath();
+        hurtigCtx.moveTo(0, py);
+        hurtigCtx.lineTo(w, py);
+        hurtigCtx.stroke();
     }
-    
+
     hurtigCtx.setLineDash([]);
-    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.45)'; 
+    hurtigCtx.strokeStyle = 'rgba(255,255,255,0.65)';
     hurtigCtx.lineWidth = 2;
     hurtigCtx.beginPath();
-    hurtigCtx.moveTo(0, h/2); hurtigCtx.lineTo(w, h/2); 
-    hurtigCtx.moveTo(w/2, 0); hurtigCtx.lineTo(w/2, h); 
+    if (originY >= 0 && originY <= h) {
+        hurtigCtx.moveTo(0, originY);
+        hurtigCtx.lineTo(w, originY);
+    }
+    if (originX >= 0 && originX <= w) {
+        hurtigCtx.moveTo(originX, 0);
+        hurtigCtx.lineTo(originX, h);
+    }
     hurtigCtx.stroke();
-    
+
     hurtigCtx.fillStyle = 'rgba(255,255,255,0.7)';
     hurtigCtx.font = '10px sans-serif';
     hurtigCtx.textAlign = 'center';
     hurtigCtx.textBaseline = 'top';
-    for(let i = -2; i <= 2; i++) {
-        if(i !== 0) {
-            let px = w/2 + i*hurtigGraphZoom;
-            hurtigCtx.fillText(i, px, h/2 + 12);
-        }
+    for (let i = -4; i <= 4; i++) {
+        if (i === 0) continue;
+        const px = originX + i * hurtigGraphZoom;
+        if (px < 0 || px > w) continue;
+        hurtigCtx.fillText(i, px, originY + 8);
     }
+
     hurtigCtx.textAlign = 'right';
-    for(let i = -2; i <= 2; i++) {
-        if(i !== 0) {
-            let py = h/2 - i*hurtigGraphZoom;
-            hurtigCtx.fillText(i, w/2 - 6, py + 4);
-        }
+    for (let i = -4; i <= 4; i++) {
+        if (i === 0) continue;
+        const py = originY - i * hurtigGraphZoom;
+        if (py < 0 || py > h) continue;
+        hurtigCtx.fillText(i, originX - 6, py + 4);
     }
-    
-    let expr = hurtigInput.value.trim();
-    if (!expr) return;
-    
-    expr = expr.replace(/\bx\b/g, '(x)')
-               .replace(/\^/g, '**')
-               .replace(/\bpi\b/gi, 'Math.PI')
-               .replace(/\be\b/gi, 'Math.E')
-               .replace(/sin/g, 'Math.sin')
-               .replace(/cos/g, 'Math.cos')
-               .replace(/tan/g, 'Math.tan')
-               .replace(/sqrt/g, 'Math.sqrt')
-               .replace(/abs/g, 'Math.abs')
-               .replace(/log\b/g, 'Math.log10')
-               .replace(/\bln\b/g, 'Math.log');
-               
+
+    const parsed = parseHurtigExpression(hurtigInput.value);
+    if (parsed.error) {
+        hurtigGraphFunction = null;
+        if (hurtigStatus) hurtigStatus.textContent = parsed.error;
+        return;
+    }
+
+    hurtigGraphFunction = parsed.fn;
+
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#ffffff';
     hurtigCtx.strokeStyle = primaryColor;
     hurtigCtx.lineWidth = 2.5;
     hurtigCtx.lineJoin = 'round';
     hurtigCtx.lineCap = 'round';
     hurtigCtx.beginPath();
-    
+
     let isDrawing = false;
     let lastY = null;
-    for(let px = 0; px <= w; px += 1) {
-        let x = (px - w/2) / hurtigGraphZoom;
+
+    for (let px = 0; px <= w; px += 1) {
+        const x = (px - originX) / hurtigGraphZoom;
+        let y;
+
         try {
-            let y = eval(expr);
-            if (typeof y !== 'number' || !isFinite(y) || Math.abs(y) > 1e4) {
-                isDrawing = false;
-                lastY = null;
-                continue;
-            }
-            let py = h/2 - y*hurtigGraphZoom;
-            if (lastY !== null && Math.abs(py - lastY) > h) {
-                isDrawing = false;
-                lastY = null;
-            }
-            if(!isDrawing) { hurtigCtx.moveTo(px, py); isDrawing = true; } 
-            else { hurtigCtx.lineTo(px, py); }
-            lastY = py;
-        } catch(e) {
+            y = hurtigGraphFunction(x);
+        } catch (error) {
+            isDrawing = false;
+            lastY = null;
+            continue;
+        }
+
+        if (typeof y !== 'number' || !isFinite(y) || Math.abs(y) > 1e5) {
+            isDrawing = false;
+            lastY = null;
+            continue;
+        }
+
+        const py = originY - y * hurtigGraphZoom;
+        if (lastY !== null && Math.abs(py - lastY) > h) {
             isDrawing = false;
             lastY = null;
         }
+
+        if (!isDrawing) {
+            hurtigCtx.moveTo(px, py);
+            isDrawing = true;
+        } else {
+            hurtigCtx.lineTo(px, py);
+        }
+        lastY = py;
     }
+
     hurtigCtx.stroke();
+
+    if (hurtigStatus) {
+        hurtigStatus.textContent = `Zoom: ${hurtigGraphZoom.toFixed(0)} | Pan: ${(hurtigGraphOffsetX / hurtigGraphZoom).toFixed(1)}, ${(-hurtigGraphOffsetY / hurtigGraphZoom).toFixed(1)}`;
+    }
 }
 
-// Event listeners for input
-hurtigInput.addEventListener('input', tegnHurtigGraf);
+function resetHurtigGraf() {
+    hurtigGraphZoom = 15;
+    hurtigGraphOffsetX = 0;
+    hurtigGraphOffsetY = 0;
+    tegnHurtigGraf();
+}
 
-// Mouse wheel zoom for fast-graph
+function updateHurtigStatus(event) {
+    if (!hurtigCanvas || !hurtigStatus) return;
+    const rect = hurtigCanvas.getBoundingClientRect();
+    const originX = rect.width / 2 + hurtigGraphOffsetX;
+    const originY = rect.height / 2 + hurtigGraphOffsetY;
+    const px = event.clientX - rect.left;
+    const py = event.clientY - rect.top;
+    const x = (px - originX) / hurtigGraphZoom;
+    const y = (originY - py) / hurtigGraphZoom;
+    if (!hurtigInput.value.trim()) {
+        hurtigStatus.textContent = 'Skriv en funksjon for å se grafen.';
+        return;
+    }
+
+    let hoverText = '';
+    if (hurtigGraphFunction) {
+        try {
+            const graphY = hurtigGraphFunction(x);
+            if (typeof graphY === 'number' && Number.isFinite(graphY) && Math.abs(graphY) < 1e5) {
+                hoverText = `x=${x.toFixed(2)}, y=${graphY.toFixed(2)} | `;
+            }
+        } catch (error) {
+            hoverText = `x=${x.toFixed(2)}, y≈${y.toFixed(2)} | `;
+        }
+    }
+
+    hurtigStatus.textContent = `${hoverText}Zoom: ${hurtigGraphZoom.toFixed(0)}`;
+}
+
+hurtigInput.addEventListener('input', tegnHurtigGraf);
+if (hurtigResetBtn) hurtigResetBtn.addEventListener('click', resetHurtigGraf);
+
 hurtigCanvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    if(e.deltaY < 0) hurtigGraphZoom *= 1.1;
+    if (e.deltaY < 0) hurtigGraphZoom *= 1.1;
     else hurtigGraphZoom /= 1.1;
     hurtigGraphZoom = Math.max(5, Math.min(50, hurtigGraphZoom));
     tegnHurtigGraf();
-}, {passive: false});
+}, { passive: false });
+
+hurtigCanvas.addEventListener('pointerdown', (event) => {
+    hurtigGraphDragging = true;
+    hurtigGraphLastPointer = { x: event.clientX, y: event.clientY };
+    hurtigCanvas.setPointerCapture(event.pointerId);
+    hurtigCanvas.style.cursor = 'grabbing';
+});
+
+hurtigCanvas.addEventListener('pointermove', (event) => {
+    if (hurtigGraphDragging) {
+        hurtigGraphOffsetX += event.clientX - hurtigGraphLastPointer.x;
+        hurtigGraphOffsetY += event.clientY - hurtigGraphLastPointer.y;
+        hurtigGraphLastPointer = { x: event.clientX, y: event.clientY };
+        tegnHurtigGraf();
+    } else {
+        updateHurtigStatus(event);
+    }
+});
+
+hurtigCanvas.addEventListener('pointerup', (event) => {
+    hurtigGraphDragging = false;
+    hurtigCanvas.style.cursor = 'grab';
+    hurtigCanvas.releasePointerCapture(event.pointerId);
+});
+
+hurtigCanvas.addEventListener('pointercancel', () => {
+    hurtigGraphDragging = false;
+    hurtigCanvas.style.cursor = 'grab';
+});
 // =========================================
 // STATISTIKK LOGIKK (SIDE-PANEL)
 // =========================================
