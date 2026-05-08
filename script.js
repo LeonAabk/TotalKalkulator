@@ -1658,7 +1658,19 @@ function openFolder(name) {
     currentFolder = name; 
     folderView.style.display = 'none'; 
     listView.style.display = 'grid'; 
-    listView.innerHTML = '';
+    
+    // Show/hide navigation based on folder type
+    const listNav = document.getElementById('list-nav');
+    listNav.style.display = 'block';
+    const backBtn = listNav.querySelector('.back-btn');
+    
+    const isSubfolder = name.includes(' / ');
+    backBtn.textContent = isSubfolder ? '← Tilbake' : '← Hjem';
+    backBtn.onclick = isSubfolder 
+        ? () => openFolder(name.split(' / ')[0]) 
+        : showHome;
+    
+    let html = '';
     
     const folderIcons = { "Favoritter": "⭐", "Grunnleggende": "🧮", "Algebra": "📉", "Geometri": "📐", "Matte": "➕", "Statistikk": "📊", "Fysikk": "🧪", "Økonomi": "💰", "Konvertering": "🔄", "Diverse": "✨" };
     
@@ -1666,12 +1678,11 @@ function openFolder(name) {
         const subfolders = getSubfolders(name);
         subfolders.forEach(sub => {
             const fullPath = `${name} / ${sub}`;
-            const card = document.createElement('div');
-            card.className = 'card glass-panel';
-            const icon = folderIcons[name.split(' / ')[0]] || "📁";
-            card.innerHTML = `<span style="font-size: 2rem">${icon}</span><br>${sub}`;
-            card.onclick = () => openFolder(fullPath);
-            listView.appendChild(card);
+            html += `
+                <div class="card glass-panel" onclick="openFolder('${fullPath}')">
+                    <span style="font-size: 2rem">${folderIcons[name.split(' / ')[0]] || "📁"}</span><br>${sub}
+                </div>
+            `;
         });
     }
 
@@ -1680,14 +1691,15 @@ function openFolder(name) {
         : calculators.filter(c => c.folder === name);
 
     list.forEach(c => {
-        const el = document.createElement('div'); 
-        el.className = 'card glass-panel';
         const isFav = favorites.includes(c.id);
-        el.innerHTML = `<button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${c.id}, event)">★</button> ${c.name}`;
-        el.onclick = () => openCalc(c); 
-        listView.appendChild(el);
+        html += `
+            <div class="card glass-panel" onclick="openCalc(calculators.find(calc => calc.id === ${c.id}))">
+                <button class="star-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${c.id}, event)">★</button> ${c.name}
+            </div>
+        `;
     });
-}
+    
+    listView.innerHTML = html;
 
 function toggleFav(id, e) {
     e.stopPropagation();
@@ -1702,6 +1714,7 @@ function openCalc(c) {
     currentCalc = c; 
     currentGraphFunc = null;
     listView.style.display = 'none'; 
+    document.getElementById('list-nav').style.display = 'none';
     calcView.style.display = 'block';
     document.getElementById('learning-view').style.display = 'none';
     
@@ -1729,6 +1742,7 @@ function setLearningMode(active) {
 function showHome() { 
     searchBar.value = ''; 
     setLearningMode(false);
+    document.getElementById('list-nav').style.display = 'none';
     renderFolders(); 
 }
 
@@ -2922,6 +2936,7 @@ window.onkeydown = (e) => {
 document.getElementById('btn-back-list').onclick = () => {
     document.getElementById('calc-view').style.display = 'none';
     document.getElementById('list-view').style.display = 'grid';
+    document.getElementById('list-nav').style.display = 'block';
     document.getElementById('result-container').style.display = 'none';
     
     document.getElementById('hurtig-graf-panel').style.display = 'block';

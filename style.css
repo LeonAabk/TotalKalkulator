@@ -395,6 +395,11 @@ body.learning-active #learning-view .learning-card {
     width: 100%; 
 }
 
+.grid-container > nav {
+    grid-column: 1 / -1; /* Span all columns */
+    margin-bottom: 15px;
+}
+
 .card { 
     padding: 25px; 
     text-align: center; 
