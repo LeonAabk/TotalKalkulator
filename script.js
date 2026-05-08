@@ -200,11 +200,13 @@ function endPracticeMode() {
 const learningTopics = {
     Prosent: {
         label: 'Prosent',
-        summary: 'Forstå prosent som andel av et tall, prosentendring og hvordan du bruker prosenter i praktiske problemer.',
+        summary: 'Prosent er en måte å uttrykke deler av et heltall på. Det brukes i alt fra rabatter i butikken til renteberegninger i banken. Å forstå prosent gjør deg bedre til å ta økonomiske beslutninger og tolke statistikk.',
         lessons: [
-            'Prosent av et tall: x% av y regnes ut som (x / 100) * y.',
-            'Prosentendring: (ny - gammel) / gammel * 100 gir hvor mange prosent noe har økt eller sunket.',
-            'Hvis du vet delen og totalen, kan du finne prosent ved å regne (del / total) * 100.'
+            'Prosent betyr "per hundre". 25% betyr 25 per hundre, eller 25/100 = 0,25.',
+            'For å finne x% av et tall: Del x på 100 og gang med tallet. Eksempel: 15% av 200 = 0,15 × 200 = 30.',
+            'Prosentendring viser hvor mye noe har økt eller minket: Formel: (ny verdi - gammel verdi) / gammel verdi × 100%.',
+            'Hvis du vet en del og totalen, finner du prosent ved: (del / total) × 100%. Eksempel: 3 av 12 elever = 3/12 × 100% = 25%.',
+            'Praktisk eksempel: En jakke koster 400 kr. Den er 20% rabatt. Ny pris = 400 × (1 - 0,20) = 320 kr.'
         ],
         generators: [
             () => {
@@ -215,7 +217,7 @@ const learningTopics = {
                     text: `Hva er ${percent}% av ${value}?`,
                     answer: result,
                     hint: 'Del prosenten på 100 og gang med tallet.',
-                    explanation: `${percent}% av ${value} = ${percent}/100 * ${value} = ${result}`
+                    explanation: `${percent}% av ${value} = ${percent}/100 × ${value} = ${result}`
                 };
             },
             () => {
@@ -226,8 +228,8 @@ const learningTopics = {
                 return {
                     text: `Tallet går fra ${oldValue} til ${newValue}. Hvor mange prosent endring er dette?`,
                     answer: result,
-                    hint: 'Bruk formelen (ny - gammel) / gammel * 100.',
-                    explanation: `(${newValue} - ${oldValue}) / ${oldValue} * 100 = ${result}%`
+                    hint: 'Bruk formelen (ny - gammel) / gammel × 100.',
+                    explanation: `(${newValue} - ${oldValue}) / ${oldValue} × 100 = ${result}%`
                 };
             },
             () => {
@@ -238,18 +240,21 @@ const learningTopics = {
                     text: `Hvor mange prosent er ${part} av ${total}?`,
                     answer: result,
                     hint: 'Del delen på totalen og gang med 100.',
-                    explanation: `${part}/${total} * 100 = ${result}%`
+                    explanation: `${part}/${total} × 100 = ${result}%`
                 };
             }
         ]
     },
     Algebra: {
         label: 'Algebra',
-        summary: 'Løs enkle ligninger, bruk lineære funksjoner og forstå grunnleggende funksjonsregning.',
+        summary: 'Algebra handler om å finne ukjente tall ved hjelp av ligninger og funksjoner. Dette er grunnlaget for mye av matematikken vi bruker i vitenskap, økonomi og teknologi. Lineære funksjoner beskriver forhold som går i rett linje.',
         lessons: [
-            'En lineær funksjon har formen y = ax + b. Skriv alltid x-leddet først.',
-            'For å løse ax + b = c flytter du b over til høyre og deler på a.',
-            'Nullpunkt er der funksjonen går gjennom x-aksen, altså der y = 0.'
+            'En lineær funksjon skrives y = ax + b, der "a" er stigningstallet og "b" er konstantleddet.',
+            'Stigningstallet "a" viser hvor bratt linjen er. Positiv a = oppover, negativ a = nedover.',
+            'Konstantleddet "b" er der linjen krysser y-aksen (når x = 0).',
+            'For å løse ligningen ax + b = c: Trekk b fra begge sider, så del på a: x = (c - b)/a.',
+            'Nullpunktet er der grafen krysser x-aksen (y = 0). Sett y = 0 og løs for x.',
+            'Praktisk eksempel: En bedrift har faste kostnader på 5000 kr + 200 kr per enhet. Kostnad = 200x + 5000.'
         ],
         generators: [
             () => {
@@ -261,7 +266,7 @@ const learningTopics = {
                     text: `Funksjonen y = ${a}x ${b >= 0 ? '+' + b : b}. Hva er y når x = ${x}?`,
                     answer: result,
                     hint: 'Sett x inn i uttrykket og regn ut.',
-                    explanation: `${a} * ${x} ${b >= 0 ? '+' + b : b} = ${result}`
+                    explanation: `${a} × ${x} ${b >= 0 ? '+' + b : b} = ${result}`
                 };
             },
             () => {
@@ -284,7 +289,7 @@ const learningTopics = {
                     text: `I y = ${a}x ${b >= 0 ? '+' + b : b}, er x = ${x}. Hva er y?`,
                     answer: y,
                     hint: 'Sett x inn og regn ut.',
-                    explanation: `${a} * ${x} ${b >= 0 ? '+' + b : b} = ${y}`
+                    explanation: `${a} × ${x} ${b >= 0 ? '+' + b : b} = ${y}`
                 };
             },
             () => {
@@ -303,11 +308,14 @@ const learningTopics = {
     },
     Geometri: {
         label: 'Geometri',
-        summary: 'Lær formler for areal og volum, og forstå hvordan du bruker dem i praktiske oppgaver.',
+        summary: 'Geometri handler om former, størrelser og rom. Vi lærer å beregne areal og volum av forskjellige figurer. Dette brukes i alt fra arkitektur og design til dagligdagse oppgaver som å male et rom eller bygge noe.',
         lessons: [
-            'Arealet av en sirkel er πr². Bruk gjerne 3.14 for π i beregninger.',
-            'Volumet av en sylinder er πr²h. Først areal av grunnflaten, så multipliser med høyden.',
-            'Arealet av et trapes er ((a + b) / 2) * h.'
+            'Areal måler hvor stor en flat overflate er. Volum måler hvor mye plass et 3D-objekt fyller.',
+            'Sirkel: Areal = π × r², der r er radius. Omkrets = 2 × π × r.',
+            'Rektangel: Areal = lengde × bredde. Dette gjelder også for kvadrat (hvor lengde = bredde).',
+            'Trapes: Areal = ((a + b) / 2) × h, der a og b er de parallelle sidene, h er høyden.',
+            'Sylinder: Volum = π × r² × h. Overflateareal = 2 × π × r × (r + h).',
+            'Praktisk eksempel: Du skal legge nytt gulv i et rom som er 4m × 5m. Areal = 4 × 5 = 20 m².'
         ],
         generators: [
             () => {
@@ -316,8 +324,8 @@ const learningTopics = {
                 return {
                     text: `Hva er arealet av en sirkel med radius ${r}?`,
                     answer: result,
-                    hint: 'Areal = πr².',
-                    explanation: `A = π * ${r}² = ${result}`
+                    hint: 'Areal = π × r². Bruk π ≈ 3,14.',
+                    explanation: `A = π × ${r}² = ${result}`
                 };
             },
             () => {
@@ -328,8 +336,8 @@ const learningTopics = {
                 return {
                     text: `Hva er arealet av et trapes med parallelle sider ${a} og ${b} og høyde ${h}?`,
                     answer: result,
-                    hint: 'Areal = ((a + b) / 2) * h.',
-                    explanation: `(( ${a} + ${b}) / 2 ) * ${h} = ${result}`
+                    hint: 'Areal = ((a + b) / 2) × h.',
+                    explanation: `(( ${a} + ${b}) / 2 ) × ${h} = ${result}`
                 };
             },
             () => {
@@ -339,19 +347,21 @@ const learningTopics = {
                 return {
                     text: `Volumet av en sylinder med radius ${r} og høyde ${h} er ?`,
                     answer: result,
-                    hint: 'Volum = πr²h.',
-                    explanation: `V = π * ${r}² * ${h} = ${result}`
+                    hint: 'Volum = π × r² × h.',
+                    explanation: `V = π × ${r}² × ${h} = ${result}`
                 };
             }
         ]
     },
     Statistikk: {
         label: 'Statistikk',
-        summary: 'Jobb med gjennomsnitt og sannsynlighet for å bygge gode ferdigheter i statistikk.',
+        summary: 'Statistikk handler om å samle, analysere og tolke data. Gjennomsnitt, sannsynlighet og spennvidde hjelper oss å forstå mønstre og ta bedre beslutninger basert på informasjon.',
         lessons: [
-            'Gjennomsnittet er summen av alle tall delt på antallet tall.',
-            'Sannsynlighet kan skrives som antall gunstige utfall delt på antall mulige utfall.',
-            'Husk at gjennomsnitt og sannsynlighet ofte er nyttig i praktiske situasjoner som spill og undersøkelser.'
+            'Gjennomsnittet (aritmetisk middel) = summen av alle tall delt på antallet tall.',
+            'Sannsynlighet = antall gunstige utfall / antall mulige utfall. Ofte uttrykt som prosent.',
+            'Spennvidde = største verdi - minste verdi. Viser hvor spredt dataene er.',
+            'Median er den midterste verdien når tallene er sortert. Gjennomsnittet kan påvirkes av ekstreme verdier.',
+            'Praktisk eksempel: Gjennomsnittlig månedslønn i en bedrift med 3 ansatte: 30k, 35k, 40k = (30+35+40)/3 = 35k.'
         ],
         generators: [
             () => {
@@ -372,7 +382,7 @@ const learningTopics = {
                     text: `Hva er sannsynligheten for riktig utfall hvis ${favorable} av ${total} er gunstige?`,
                     answer: result,
                     hint: 'Del gunstige utfall på totalen og gang med 100.',
-                    explanation: `(${favorable}/${total}) * 100 = ${result}%`
+                    explanation: `(${favorable}/${total}) × 100 = ${result}%`
                 };
             },
             () => {
@@ -391,11 +401,14 @@ const learningTopics = {
     },
     Fysikk: {
         label: 'Fysikk',
-        summary: 'Løs oppgaver med hastighet, bølger og enkle fysiske formler.',
+        summary: 'Fysikk forklarer hvordan verden fungerer - fra bevegelse og energi til lys og lyd. Disse grunnleggende konseptene hjelper oss å forstå alt fra hvorfor ting faller til hvordan bølger fungerer.',
         lessons: [
-            'Fart er distanse delt på tid: v = s / t.',
-            'Bølgefart er f * λ, der f er frekvens og λ er bølgelengde.',
-            'Lydfart i luft varierer med temperatur, cirka 331,3 + 0,6t.'
+            'Fart (hastighet) = distanse / tid. Enhet: m/s. Gjennomsnittsfart = total distanse / total tid.',
+            'Akselerasjon = endring i fart / tid. Positiv = raskere, negativ = saktere.',
+            'Bølgefart = frekvens × bølgelengde. Frekvens (f) måles i Hz, bølgelengde (λ) i meter.',
+            'Lydfart i luft avhenger av temperatur: v = 331,3 + 0,6 × t, der t er temperatur i °C.',
+            'Energi kan ikke skapes eller ødelegges, bare omformes (energiloven).',
+            'Praktisk eksempel: En bil kjører 100 km på 2 timer. Gjennomsnittsfart = 100 km / 2 h = 50 km/t.'
         ],
         generators: [
             () => {
@@ -405,7 +418,7 @@ const learningTopics = {
                     text: `Hvor mange km/t er ${speed} m/s?`,
                     answer: result,
                     hint: 'Gang med 3,6.',
-                    explanation: `${speed} * 3.6 = ${result}`
+                    explanation: `${speed} × 3.6 = ${result}`
                 };
             },
             () => {
@@ -413,10 +426,10 @@ const learningTopics = {
                 const wavelength = Math.floor(Math.random() * 9) + 2;
                 const result = Number((frequency * wavelength).toFixed(1));
                 return {
-                    text: `Bølgefarten er f * λ. Hvor stor er bølgefarten når f = ${frequency} Hz og λ = ${wavelength} m?`,
+                    text: `Bølgefarten er f × λ. Hvor stor er bølgefarten når f = ${frequency} Hz og λ = ${wavelength} m?`,
                     answer: result,
                     hint: 'Gang frekvensen med bølgelengden.',
-                    explanation: `${frequency} * ${wavelength} = ${result}`
+                    explanation: `${frequency} × ${wavelength} = ${result}`
                 };
             },
             () => {
@@ -425,19 +438,22 @@ const learningTopics = {
                 return {
                     text: `Hva er lydfarten ved ${temp} °C?`,
                     answer: result,
-                    hint: 'Bruk formelen 331.3 + 0.6t.',
-                    explanation: `331.3 + 0.6 * ${temp} = ${result}`
+                    hint: 'Bruk formelen 331.3 + 0.6 × t.',
+                    explanation: `331.3 + 0.6 × ${temp} = ${result}`
                 };
             }
         ]
     },
     Trigonometri: {
         label: 'Trigonometri',
-        summary: 'Lær om sinus, cosinus og tangens i rettvinklede trekanter.',
+        summary: 'Trigonometri handler om forhold mellom sider og vinkler i trekanter. Sinus, cosinus og tangens brukes i alt fra navigasjon og fysikk til datagrafikk og arkitektur.',
         lessons: [
-            'I en rettvinklet trekant er sin(θ) = motstående katet / hypotenusen.',
-            'Cos(θ) = tilstøtende katet / hypotenusen.',
-            'Tan(θ) = motstående katet / tilstøtende katet.'
+            'I en rettvinklet trekant: Sin(vinkel) = motstående katet / hypotenusen.',
+            'Cos(vinkel) = tilstøtende katet / hypotenusen.',
+            'Tan(vinkel) = motstående katet / tilstøtende katet.',
+            'Husk SOHCAHTOA: Sin = Opposite/Hypotenuse, Cos = Adjacent/Hypotenuse, Tan = Opposite/Adjacent.',
+            'Vinkler: 30° = π/6 radianer, 45° = π/4, 60° = π/3, 90° = π/2.',
+            'Praktisk eksempel: En stige på 5m står 3m fra veggen. Vinkel med bakken: tan(θ) = 3/4, så θ ≈ 37°.'
         ],
         generators: [
             () => {
@@ -1619,6 +1635,12 @@ function renderFolders() {
         favCard.onclick = () => openFolder("Favoritter"); 
         folderView.appendChild(favCard);
     }
+
+    const learningCard = document.createElement('div');
+    learningCard.className = 'card glass-panel';
+    learningCard.innerHTML = `<span style="font-size: 2rem">🎓</span><br>Læringsstudio`;
+    learningCard.onclick = () => showLearningStudio();
+    folderView.appendChild(learningCard);
     
     const folderNames = getTopLevelFolders();
     folderNames.forEach(name => {
@@ -1676,6 +1698,7 @@ function toggleFav(id, e) {
 }
 
 function openCalc(c) {
+    setLearningMode(false);
     currentCalc = c; 
     currentGraphFunc = null;
     listView.style.display = 'none'; 
@@ -1697,20 +1720,29 @@ function openCalc(c) {
     updateGraphButtons(false);
 }
 
+function setLearningMode(active) {
+    document.body.classList.toggle('learning-active', active);
+    const learningBtn = document.getElementById('learning-studio-btn');
+    if (learningBtn) learningBtn.classList.toggle('active', active);
+}
+
 function showHome() { 
     searchBar.value = ''; 
+    setLearningMode(false);
     renderFolders(); 
 }
 
 function showLearningStudio() {
-    // Hide other views
+    setLearningMode(true);
     document.getElementById('folder-view').style.display = 'none';
     document.getElementById('list-view').style.display = 'none';
     document.getElementById('calc-view').style.display = 'none';
-    document.getElementById('learning-view').style.display = 'none';
-    // Show learning view
     document.getElementById('learning-view').style.display = 'block';
-    // Load initial content
+    document.getElementById('result-container').style.display = 'none';
+    document.getElementById('hurtig-graf-panel').style.display = 'none';
+    document.getElementById('enhetssirkel-panel').style.display = 'none';
+    document.getElementById('prosjektil-panel').style.display = 'none';
+    document.getElementById('statistikk-panel').style.display = 'none';
     loadLessonCard();
     loadQuizQuestion();
 }
