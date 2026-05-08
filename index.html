@@ -157,6 +157,11 @@
                         <button class="action-btn small" id="hurtig-reset-btn" type="button">🔄 Nullstill</button>
                         <span style="flex:1; font-size:0.85rem; color:#ccc; align-self:center; min-width:0;">Musehjul zoom, dra for pan og hold over grafen for koordinater.</span>
                     </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                        <button class="action-btn small" type="button" onclick="setHurtigExample('x^2 - 4')">x^2 - 4</button>
+                        <button class="action-btn small" type="button" onclick="setHurtigExample('sin(x)')">sin(x)</button>
+                        <button class="action-btn small" type="button" onclick="setHurtigExample('1/x')">1/x</button>
+                    </div>
                     <canvas id="hurtigCanvas" width="250" height="150" style="background: #000; border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1); touch-action: none; cursor: grab;"></canvas>
                     <p id="hurtig-status" style="font-size:0.82rem; color:#ccc; margin-top: 10px; min-height:1.5em;"></p>
                 </div>

@@ -2511,6 +2511,13 @@ function resetHurtigGraf() {
     tegnHurtigGraf();
 }
 
+function setHurtigExample(example) {
+    if (!hurtigInput) return;
+    hurtigInput.value = example;
+    tegnHurtigGraf();
+    hurtigInput.focus();
+}
+
 function updateHurtigStatus(event) {
     if (!hurtigCanvas || !hurtigStatus) return;
     const rect = hurtigCanvas.getBoundingClientRect();
