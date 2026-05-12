@@ -5,6 +5,12 @@ const searchBar = document.getElementById('search-bar');
 const historyPanel = document.getElementById('history-panel');
 const canvas = document.getElementById('graphCanvas'), ctx = canvas.getContext('2d');
 
+// Check if required elements exist
+if (!folderView || !listView || !calcView || !searchBar || !historyPanel) {
+    console.error('Required DOM elements not found. Page may not load correctly.');
+    alert('Feil: Noen nødvendige elementer mangler. Siden kan ikke lastes riktig.');
+}
+
 function gcd(a, b) { return b === 0 ? Math.abs(a) : gcd(b, a % b); }
 
 function setTheme(primary, secondary, index) {
@@ -82,6 +88,12 @@ let favorites = safeParseJSON(localStorage.getItem('calcFavorites'), []) || [];
 let historyData = safeParseJSON(localStorage.getItem('calcHistory'), []) || [];
 let currentFolder = null;
 let currentCalc = null;
+
+// Check if calculators array is loaded
+if (typeof calculators === 'undefined' || !Array.isArray(calculators) || calculators.length === 0) {
+    console.error('Calculators array not loaded properly');
+    alert('Feil: Kalkulatorene kunne ikke lastes. Siden fungerer ikke riktig.');
+}
 
 // --- GRAF-VARIABLER ---
 let currentGraphFunc = null;
@@ -1617,41 +1629,46 @@ function getSubfolders(folderName) {
 }
 
 function renderFolders() {
-    folderView.innerHTML = ''; 
-    folderView.style.display = 'grid'; 
-    listView.style.display = 'none'; 
-    calcView.style.display = 'none'; 
-    document.getElementById('learning-view').style.display = 'none';
-    historyPanel.style.display = 'block';
-    document.getElementById('hurtig-graf-panel').style.display = 'block';
-    document.getElementById('enhetssirkel-panel').style.display = 'block';
-    
-    const folderIcons = { "Favoritter": "⭐", "Grunnleggende": "🧮", "Algebra": "📉", "Geometri": "📐", "Matte": "➕", "Statistikk": "📊", "Fysikk": "🧪", "Økonomi": "💰", "Konvertering": "🔄", "Diverse": "✨" };
-    
-    if(favorites.length > 0) {
-        const favCard = document.createElement('div'); 
-        favCard.className = 'card glass-panel';
-        favCard.innerHTML = `<span style="font-size: 2rem">${folderIcons["Favoritter"]}</span><br>Favoritter`;
-        favCard.onclick = () => openFolder("Favoritter"); 
-        folderView.appendChild(favCard);
-    }
+    try {
+        folderView.innerHTML = ''; 
+        folderView.style.display = 'grid'; 
+        listView.style.display = 'none'; 
+        calcView.style.display = 'none'; 
+        document.getElementById('learning-view').style.display = 'none';
+        historyPanel.style.display = 'block';
+        document.getElementById('hurtig-graf-panel').style.display = 'block';
+        document.getElementById('enhetssirkel-panel').style.display = 'block';
+        
+        const folderIcons = { "Favoritter": "⭐", "Grunnleggende": "🧮", "Algebra": "📉", "Geometri": "📐", "Matte": "➕", "Statistikk": "📊", "Fysikk": "🧪", "Økonomi": "💰", "Konvertering": "🔄", "Diverse": "✨" };
+        
+        if(favorites.length > 0) {
+            const favCard = document.createElement('div'); 
+            favCard.className = 'card glass-panel';
+            favCard.innerHTML = `<span style="font-size: 2rem">${folderIcons["Favoritter"]}</span><br>Favoritter`;
+            favCard.onclick = () => openFolder("Favoritter"); 
+            folderView.appendChild(favCard);
+        }
 
-    const learningCard = document.createElement('div');
-    learningCard.className = 'card glass-panel';
-    learningCard.innerHTML = `<span style="font-size: 2rem">🎓</span><br>Læringsstudio`;
-    learningCard.onclick = () => showLearningStudio();
-    folderView.appendChild(learningCard);
-    
-    const folderNames = getTopLevelFolders();
-    folderNames.forEach(name => {
-        const card = document.createElement('div'); 
-        card.className = 'card glass-panel';
-        const icon = folderIcons[name] || "📁";
-        card.innerHTML = `<span style="font-size: 2rem">${icon}</span><br>${name}`;
-        card.onclick = () => openFolder(name); 
-        folderView.appendChild(card);
-    });
-    renderHistory();
+        const learningCard = document.createElement('div');
+        learningCard.className = 'card glass-panel';
+        learningCard.innerHTML = `<span style="font-size: 2rem">🎓</span><br>Læringsstudio`;
+        learningCard.onclick = () => showLearningStudio();
+        folderView.appendChild(learningCard);
+        
+        const folderNames = getTopLevelFolders();
+        folderNames.forEach(name => {
+            const card = document.createElement('div'); 
+            card.className = 'card glass-panel';
+            const icon = folderIcons[name] || "📁";
+            card.innerHTML = `<span style="font-size: 2rem">${icon}</span><br>${name}`;
+            card.onclick = () => openFolder(name); 
+            folderView.appendChild(card);
+        });
+        renderHistory();
+    } catch (error) {
+        console.error('Error in renderFolders:', error);
+        alert('Feil ved lasting av mapper: ' + error.message);
+    }
 }
 
 function openFolder(name) {
@@ -3036,11 +3053,16 @@ if (fartInput && kastvinkelInput) {
 }
 
 // Start appen
-renderFolders();
-oppdaterSirkel();
-tegnHurtigGraf();
-loadLessonCard();
-loadQuizQuestion();
+try {
+    renderFolders();
+    oppdaterSirkel();
+    tegnHurtigGraf();
+    loadLessonCard();
+    loadQuizQuestion();
+} catch (error) {
+    console.error('Error initializing app:', error);
+    alert('Feil ved oppstart av appen: ' + error.message);
+}
  
 if (typeof tegnKastbane === 'function') tegnKastbane();
 if (typeof tegnNormalfordeling === 'function') tegnNormalfordeling();
