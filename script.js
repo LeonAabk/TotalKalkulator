@@ -3051,3 +3051,4 @@ if ('serviceWorker' in navigator) {
         .then(registration => console.log('Service Worker registered:', registration))
         .catch(error => console.warn('Service Worker registration failed:', error));
 }
+ 
