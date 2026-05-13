@@ -1720,6 +1720,7 @@ function openFolder(name) {
     window.currentCalcList = list;
     
     listView.innerHTML = html;
+}
 
 function toggleFav(id, e) {
     e.stopPropagation();
