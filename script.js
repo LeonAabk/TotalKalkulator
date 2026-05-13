@@ -89,12 +89,6 @@ let historyData = safeParseJSON(localStorage.getItem('calcHistory'), []) || [];
 let currentFolder = null;
 let currentCalc = null;
 
-// Check if calculators array is loaded
-if (typeof calculators === 'undefined' || !Array.isArray(calculators) || calculators.length === 0) {
-    console.error('Calculators array not loaded properly');
-    alert('Feil: Kalkulatorene kunne ikke lastes. Siden fungerer ikke riktig.');
-}
-
 // --- GRAF-VARIABLER ---
 let currentGraphFunc = null;
 let graphScale = 30; 
@@ -1607,6 +1601,11 @@ const calculators = [
         }) 
     }
 ];
+
+if (!Array.isArray(calculators) || calculators.length === 0) {
+    console.error('Calculators array not loaded properly');
+    alert('Feil: Kalkulatorene kunne ikke lastes. Siden fungerer ikke riktig.');
+}
 
 function clearHistory() {
     if(confirm("Slette hele loggen?")) {
