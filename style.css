@@ -1,240 +1,691 @@
-<!DOCTYPE html>
-<html lang="no">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Total Kalkulator - Aabakstudio</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="stylesheet" href="style.css">
-    <script data-goatcounter="https://leonaabak.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
-</head>
-<body>
-
-    <header class="header-container">
-        <div class="header-buttons">
-            <button class="header-logo" onclick="showHome()">Total Kalkulator</button>
-            <button id="learning-studio-btn" class="header-btn" onclick="showLearningStudio()">🎓 Læringsstudio</button>
-        </div>
-        <p class="author-tag">Leon Aabak</p>
-    </header>
-
-    <nav class="appearance-controls" aria-label="Utseendealternativer">
-        <div id="theme-selector" aria-label="Velg fargetema" style="display: flex; gap: 12px;">
-            <button class="theme-dot" style="background: #00d2ff" onclick="setTheme('#00d2ff', '#3a7bd5', 0)" aria-label="Blått tema"></button>
-            <button class="theme-dot" style="background: #00ff87" onclick="setTheme('#00ff87', '#60efff', 1)" aria-label="Grønt tema"></button>
-            <button class="theme-dot" style="background: #e000ff" onclick="setTheme('#e000ff', '#7000ff', 2)" aria-label="Lilla tema"></button>
-            <button class="theme-dot" style="background: #ff8c00" onclick="setTheme('#ff8c00', '#e52d27', 3)" aria-label="Oransje tema"></button>
-            <button class="theme-dot" style="background: #ff69b4" onclick="setTheme('#ff69b4', '#ffb6c1', 4)" aria-label="Rosa tema"></button>
-        </div>
-
-        <div class="separator"></div>
-
-        <div id="background-selector" aria-label="Velg bakgrunnsmodus" style="display: flex; gap: 8px;">
-            <button class="appearance-btn" onclick="setBackground('light')" aria-label="Lyst tema">💡</button>
-            <button class="appearance-btn active" onclick="setBackground('normal')" aria-label="Normalt tema">🌙</button>
-            <button class="appearance-btn" onclick="setBackground('dim')" aria-label="Demt tema">🌑</button>
-        </div>
-
-        <div id="fontsize-selector" aria-label="Velg skriftstørrelse" style="display: flex; gap: 8px;">
-            <button class="appearance-btn" onclick="setFontSize('compact')" aria-label="Kompakt">𝐀</button>
-            <button class="appearance-btn active" onclick="setFontSize('normal')" aria-label="Normal">𝐀𝐀</button>
-            <button class="appearance-btn" onclick="setFontSize('large')" aria-label="Stor">𝐀𝐀𝐀</button>
-        </div>
-
-        <div id="contrast-selector" aria-label="Velg kontrastmodus" style="display: flex; gap: 8px;">
-            <button class="appearance-btn active" onclick="setContrast('normal')" aria-label="Normal kontrast">Standard</button>
-            <button class="appearance-btn" onclick="setContrast('high')" aria-label="Høy kontrast">Høy</button>
-        </div>
-    </nav>
-
-    <main>
-        <section id="search-container">
-            <label for="search-bar" class="visually-hidden">Søk i funksjoner</label>
-            <input type="text" id="search-bar" placeholder="🔍 Søk i 80+ funksjoner...">
-        </section>
-
-        <div class="hoved-layout">
-            
-            <div class="venstre-kolonne">
-                <section id="folder-view" class="grid-container"></section>
-                <div id="list-nav" style="display: none;">
-                    <nav style="display: flex; margin-bottom: 15px;">
-                        <button class="back-btn" onclick="showHome()">← Hjem</button>
-                    </nav>
-                </div>
-                <section id="list-view" class="grid-container" style="display: none;"></section>
-
-                <article id="calc-view" class="glass-panel" style="display: none;">
-                    <nav style="display: flex;">
-                        <button class="back-btn" onclick="showHome()">← Hjem</button>
-                        <button class="back-btn" id="btn-back-list">← Tilbake</button>
-                    </nav>
-                    <h2 id="calc-title" style="margin-bottom: 15px; color: var(--primary);"></h2>
-                    <div id="pre-calc-formula" aria-live="polite"></div>
-                    
-                    <div id="input-container"></div>
-                    <button class="action-btn" onclick="executeCalc()">Regn ut (Enter)</button>
-                    
-                    <section id="result-container">                        <div id="result-controls" class="result-controls">
-                            <button class="action-btn small" id="toggle-steps-btn" onclick="toggleSteps()">Vis steg</button>
-                            <button class="action-btn small" id="download-graph-btn" onclick="downloadGraph()">Last ned graf</button>
-                            <button class="action-btn small" id="share-graph-btn" onclick="shareGraph()">Del graf</button>
-                        </div>                        <div id="result-box" role="status"></div>
-                        <div id="explanation-box"></div>
-                        <div id="graph-container"><canvas id="graphCanvas"></canvas></div>
-                    </section>
-                </article>
-
-                <article id="learning-view" class="glass-panel" style="display: none; padding: 30px; max-width: 100%; max-height: 80vh; overflow-y: auto;">
-                    <nav style="display: flex; margin-bottom: 20px;">
-                        <button class="back-btn" onclick="showHome()">← Hjem</button>
-                    </nav>
-                    <h2 style="margin-bottom: 20px; color: var(--primary); text-align: center;">🎓 Læringsstudio</h2>
-                    
-                    <div class="learning-controls" style="margin-bottom: 30px;">
-                        <div style="flex: 1; min-width: 200px;">
-                            <label for="learning-topic" style="display:block; margin-bottom: 8px; color: #ccc; font-size: 1rem;">Velg tema</label>
-                            <select id="learning-topic" onchange="loadLessonCard(); loadQuizQuestion();" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: inherit; font-size: 1rem; cursor: pointer; transition: all 0.3s ease;">
-                                <option value="Prosent">📊 Prosent</option>
-                                <option value="Algebra">📈 Algebra</option>
-                                <option value="Geometri">📐 Geometri</option>
-                                <option value="Trigonometri">📏 Trigonometri</option>
-                                <option value="Statistikk">📊 Statistikk</option>
-                                <option value="Fysikk">⚛️ Fysikk</option>
-                            </select>
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: flex-end; flex: 1; min-width: 250px;">
-                            <button class="action-btn small" onclick="loadLessonCard()">📖 Forklaring</button>
-                            <button class="action-btn small" onclick="loadQuizQuestion()">🧠 Oppgave</button>
-                        </div>
-                    </div>
-
-                    <!-- VANSKELIGHETSGRAD VELGER -->
-                    <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
-                        <div style="font-size: 0.9rem; color: #999; margin-bottom: 8px;">Vanskelighetsgrad:</div>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button class="difficulty-btn active" onclick="setQuizDifficulty('easy'); loadQuizQuestion();" style="padding: 8px 15px; border-radius: 6px; border: 2px solid #00ff00; background: rgba(0,255,0,0.1); color: inherit; cursor: pointer; font-weight: 500;">🟢 Lett</button>
-                            <button class="difficulty-btn" onclick="setQuizDifficulty('medium'); loadQuizQuestion();" style="padding: 8px 15px; border-radius: 6px; border: 2px solid #ffcc00; background: rgba(255,200,0,0.1); color: inherit; cursor: pointer; font-weight: 500;">🟡 Middels</button>
-                            <button class="difficulty-btn" onclick="setQuizDifficulty('hard'); loadQuizQuestion();" style="padding: 8px 15px; border-radius: 6px; border: 2px solid #ff6600; background: rgba(255,100,0,0.1); color: inherit; cursor: pointer; font-weight: 500;">🔴 Vanskelig</button>
-                        </div>
-                    </div>
-
-                    <!-- PRAKSIS-STATUS (skjult som standard) -->
-                    <div id="practice-status" style="display: none;"></div>
-
-                    <div id="learning-card" class="learning-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; min-height: 200px; display: block; text-align: left;"></div>
-                    
-                    <div class="learning-score" style="text-align: center; margin-bottom: 20px; font-size: 1.1rem;">Poeng: <span id="quiz-score">0</span> / <span id="quiz-total">0</span> | Riktige: <span id="quiz-correct">0</span> <button class="action-btn small" onclick="resetQuizScore()" style="margin-left: 15px;">🔄 Nullstill</button></div>
-                    
-                    <div class="progress-bar" style="width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; margin-bottom: 20px; overflow: hidden;">
-                        <div id="progress-fill" style="height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease;"></div>
-                    </div>
-
-                    <!-- ANALYSE OG MODUS KNAPPER -->
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <button class="action-btn small" onclick="startPracticeMode()" style="flex: 1; min-width: 120px;">🎯 Praksis-modus</button>
-                        <button class="action-btn small" onclick="showLearningAnalytics()" style="flex: 1; min-width: 120px;">📊 Min progresjon</button>
-                        <button class="action-btn small" onclick="showLearningPaths()" style="flex: 1; min-width: 120px;">🗺️ Læringsveier</button>
-                        <button class="action-btn small" onclick="showDifficultQuestions()" style="flex: 1; min-width: 120px;">🔄 Repetisjon</button>
-                    </div>
-                    
-                    <div class="quiz-section" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
-                        <input type="text" id="quiz-answer" placeholder="Skriv svaret her" style="width: 100%; font-size: 1.1rem; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: inherit; margin-bottom: 15px;">
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
-                            <button class="action-btn small" onclick="checkQuizAnswer()">✅ Sjekk svar</button>
-                            <button class="action-btn small" onclick="toggleHint()">💡 Hint</button>
-                            <button class="action-btn small" onclick="loadQuizQuestion()">🔄 Ny</button>
-                        </div>
-                        <p id="quiz-feedback" style="color: #ccc; min-height: 1.5em; font-size: 1rem; margin-bottom: 10px;"></p>
-                        <p id="quiz-hint" style="color: var(--primary); font-size: 1rem; background: rgba(0,0,0,0.12); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); padding: 15px; display: none;"></p>
-                    </div>
-                </article>
-            </div>
-
-            <aside class="hoyre-kolonne">
-                
-                <div id="hurtig-graf-panel" class="glass-panel verktoy-boks">
-                    <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">📉 Hurtig-Graf</h3>
-                    <input type="text" id="hurtigGrafInput" placeholder="f.eks. x^2 - 4 eller sin(x)" style="margin-bottom: 10px; padding: 8px; font-family: monospace;">
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
-                        <button class="action-btn small" id="hurtig-reset-btn" type="button">🔄 Nullstill</button>
-                        <span style="flex:1; font-size:0.85rem; color:#ccc; align-self:center; min-width:0;">Musehjul zoom, dra for pan og hold over grafen for koordinater.</span>
-                    </div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
-                        <button class="action-btn small" type="button" onclick="setHurtigExample('x^2 - 4')">x^2 - 4</button>
-                        <button class="action-btn small" type="button" onclick="setHurtigExample('sin(x)')">sin(x)</button>
-                        <button class="action-btn small" type="button" onclick="setHurtigExample('1/x')">1/x</button>
-                    </div>
-                    <canvas id="hurtigCanvas" width="250" height="150" style="background: #000; border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1); touch-action: none; cursor: grab;"></canvas>
-                    <p id="hurtig-status" style="font-size:0.82rem; color:#ccc; margin-top: 10px; min-height:1.5em;"></p>
-                </div>
-
-                <div id="enhetssirkel-panel" class="glass-panel verktoy-boks">
-                    <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">⭕ Enhetssirkel</h3>
-                    <canvas id="enhetssirkel" width="250" height="250" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 250px; display: block; margin: 0 auto; box-shadow: none;"></canvas>
-                    
-                    <div class="kontroller" style="margin-top: 15px;">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
-                            <label for="vinkelInput" style="font-size: 0.9rem; color: #ccc;">Vinkel (°):</label>
-                            <input type="number" id="vinkelInput" value="45" min="-360" max="360" style="padding: 6px; width: 70px; text-align: center; border-radius: 5px; border: 1px solid var(--primary); background: transparent; color: inherit; font-size: 1rem; margin-bottom: 0;">
-                        </div>
-                        
-                        <div id="trig-resultater" style="display: flex; justify-content: space-around; font-size: 0.9rem; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
-                            <p>Sin: <span id="sinVerdi" style="font-weight: bold; color: var(--primary);">-</span></p>
-                            <p>Cos: <span id="cosVerdi" style="font-weight: bold; color: var(--primary);">-</span></p>
-                        </div>
-                    </div>
-                </div>
-                <div id="prosjektil-panel" class="glass-panel verktoy-boks">
-                    <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">🚀 Kastbane</h3>
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <input type="number" id="fartInput" placeholder="Fart (m/s)" value="15" style="width: 50%; font-size: 0.9rem; padding: 8px;">
-                        <input type="number" id="kastvinkelInput" placeholder="Vinkel (°)" value="45" style="width: 50%; font-size: 0.9rem; padding: 8px;">
-                    </div>
-                    <canvas id="prosjektilCanvas" width="250" height="150" style="background: rgba(255,255,255,0.05); border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1);"></canvas>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #ccc; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
-                        <span>Lengde: <b id="kastLengde" style="color: var(--primary);">0 m</b></span>
-                        <span>Høyde: <b id="kastHoyde" style="color: var(--primary);">0 m</b></span>
-                    </div>
-                </div>
-                
-                <div id="statistikk-panel" class="glass-panel verktoy-boks">
-                    <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem;">📊 Normalfordeling</h3>
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <input type="number" id="snittInput" placeholder="Snitt (μ)" value="50" style="width: 50%; font-size: 0.9rem; padding: 8px;">
-                        <input type="number" id="avvikInput" placeholder="Avvik (σ)" value="10" style="width: 50%; font-size: 0.9rem; padding: 8px;">
-                    </div>
-                    <input type="number" id="verdiInput" placeholder="Din verdi (x) - Valgfritt" value="65" style="width: 100%; font-size: 0.9rem; padding: 8px; margin-bottom: 10px;">
-                    
-                    <canvas id="statCanvas" width="250" height="150" style="background: rgba(255,255,255,0.05); border-radius: 5px; width: 100%; border: 1px solid rgba(255,255,255,0.1);"></canvas>
-                    
-                    <p id="statTekst" style="font-size: 0.85rem; color: #ccc; margin-top: 10px; text-align: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 5px;">
-                        Fyll inn tall for å se kurven.
-                    </p>
-                </div>
-
-                <section id="history-panel" class="glass-panel verktoy-boks" style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h3 style="color: var(--primary); font-size: 1.1rem;">🕒 Historikk</h3>
-                        <button class="clear-history" onclick="clearHistory()">🗑️ Tøm</button>
-                    </div>
-                    <div id="history-list" style="max-height: 250px; overflow-y: auto;"><i>Ingen historikk enda.</i></div>
-                </section>
-
-            </aside>
-        </div>
-    </main>
-
-    <div id="toast" role="alert">Kopiert! ✅</div>
+:root {
+    --bg-color: #0f0f13;
+    --card-bg: rgba(30, 30, 35, 0.7);
+    --input-bg: rgba(45, 45, 50, 0.8);
+    --primary: #00d2ff;
+    --secondary: #3a7bd5;
+    --text-main: #ffffff;
+    --text-muted: #aaaaaa;
+    --formula-bg: rgba(42, 42, 48, 0.8);
+    --fav-color: #ffd700;
+    --danger: #ff4b2b;
     
-    <footer class="footer">
-        <p>Total Kalk © 2026 | Leon Aabak</p>
-    </footer>
+    /* Appearance settings */
+    --font-scale: 1;
+    --contrast-boost: 0;
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+/* Light mode */
+:root.bg-light {
+    --bg-color: #f5f5f7;
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --input-bg: rgba(240, 240, 245, 0.9);
+    --text-main: #1a1a1a;
+    --text-muted: #555555;
+    --formula-bg: rgba(230, 230, 240, 0.9);
+}
+
+/* Dim mode */
+:root.bg-dim {
+    --bg-color: #050508;
+    --card-bg: rgba(15, 15, 20, 0.8);
+    --input-bg: rgba(20, 20, 25, 0.9);
+}
+
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+}
+
+body {
+    background-color: var(--bg-color);
+    background-image: 
+        radial-gradient(circle at 15% 50%, color-mix(in srgb, var(--primary) 15%, transparent), transparent 40%),
+        radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--secondary) 15%, transparent), transparent 40%);
+    background-size: 150% 150%;
+    animation: pustendeBakgrunn 15s ease-in-out infinite alternate;
+    background-attachment: fixed;
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 50px;
+    font-size: calc(16px * var(--font-scale));
+    filter: contrast(calc(1 + var(--contrast-boost)));
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@keyframes pustendeBakgrunn {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+/* --- Header & Logo --- */
+.header-container {
+    margin-top: 40px;
+    text-align: center;
+    width: 100%;
+}
+
+.header-logo {
+    display: block;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: clamp(2.5rem, 8vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    font-family: inherit;
+    outline: none;
+}
+
+.author-tag { 
+    color: var(--text-muted); 
+    margin-bottom: 20px; 
+    letter-spacing: 2px; 
+    text-transform: uppercase; 
+    font-size: 0.8rem; 
+}
+
+/* --- Tema-velger --- */
+#theme-selector { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 25px; 
+    background: rgba(255, 255, 255, 0.05); 
+    padding: 10px 20px; 
+    border-radius: 30px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+}
+
+.theme-dot { 
+    width: 22px; 
+    height: 22px; 
+    border-radius: 50%; 
+    cursor: pointer; 
+    border: 2px solid transparent; 
+    transition: 0.3s; 
+    padding: 0;
+}
+
+.theme-dot.active { 
+    border-color: white; 
+    transform: scale(1.3); 
+    box-shadow: 0 0 10px var(--primary);
+}
+
+/* --- Appearance Controls --- */
+.appearance-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 20px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
+    align-items: center;
+}
+
+.separator {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.appearance-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.appearance-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+}
+
+.appearance-btn.active {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.result-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.result-controls .action-btn.small {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+#explanation-box {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+    white-space: pre-wrap;
+    line-height: 1.55;
+    color: #e8e8e8;
+    min-height: 60px;
+}
+
+#explanation-box .step-line {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.learning-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.learning-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 18px;
+    min-height: 120px;
+    color: #e8e8e8;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+
+.learning-score {
+    color: #ccc;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+#quiz-hint {
+    display: none;
+}
+
+#quiz-hint.visible {
+    display: block;
+}
+
+#learning-panel select,
+#learning-panel input {
+    background-color: var(--input-bg);
+    color: var(--text-main);
+}
+
+#learning-panel select {
+    border-color: rgba(255,255,255,0.16);
+}
+
+#learning-panel select option {
+    color: var(--text-main);
+    background-color: var(--bg-color);
+}
+
+#learning-panel label {
+    color: var(--text-muted);
+}
+
+#quiz-panel .action-btn {
+    flex: 1 1 140px;
+}
+
+.action-btn {
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #111;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    font-weight: 700;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.action-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- NY LAYOUT: TO KOLONNER --- */
+main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hoved-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 20px;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.venstre-kolonne {
+    flex: 1;
+    min-width: 320px;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hoyre-kolonne {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header-btn {
+    border: 2px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    color: var(--text-main);
+    padding: 10px 18px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.header-btn:hover,
+.header-btn.active {
+    background: rgba(255,255,255,0.14);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+body.learning-active .hoved-layout {
+    justify-content: center;
+}
+
+body.learning-active .venstre-kolonne {
+    width: 100%;
+    max-width: 1200px;
+}
+
+body.learning-active .hoyre-kolonne {
+    display: none;
+}
+
+body.learning-active #learning-view {
+    width: 100%;
+    max-width: 1200px;
+    padding: 40px 20px;
+}
+
+body.learning-active #learning-view .learning-card {
+    min-height: 260px;
+}
+
+.verktoy-boks {
+    padding: 20px;
+    width: 100%;
+}
+
+@media (max-width: 800px) {
+    .hoyre-kolonne {
+        width: 100%;
+        max-width: 800px;
+    }
+}
+
+/* --- Paneler & Kort --- */
+.glass-panel { 
+    background-color: var(--card-bg); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px); 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    border-radius: 12px; 
+}
+
+#search-container { 
+    width: 100%; 
+    max-width: 1160px; /* Tilpasset den nye layout-bredden */
+    padding: 0 20px; 
+    margin-bottom: 20px; 
+}
+
+#search-bar { 
+    width: 100%; 
+    padding: 18px; 
+    font-size: 1.1rem; 
+    border-radius: 12px; 
+    background-color: var(--input-bg); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    color: white; 
+    outline: none; 
+}
+
+.grid-container { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 15px; 
+    width: 100%; 
+}
+
+.grid-container > nav {
+    grid-column: 1 / -1; /* Span all columns */
+    margin-bottom: 15px;
+}
+
+.card { 
+    padding: 25px; 
+    text-align: center; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    font-weight: 600; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 120px; 
+    position: relative; 
+}
+
+.card:hover { 
+    transform: translateY(-8px) scale(1.02); 
+    background-color: rgba(255, 255, 255, 0.1); 
+    border-color: var(--primary); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 15px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.star-btn { 
+    position: absolute; 
+    top: 10px; 
+    right: 10px; 
+    font-size: 1.2rem; 
+    color: rgba(255,255,255,0.2); 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    padding: 0;
+}
+
+.star-btn.active { 
+    color: var(--fav-color); 
+}
+
+/* --- Kalkulator-visning --- */
+#calc-view { 
+    display: none; 
+    width: 100%; 
+    padding: 30px; 
+}
+
+#pre-calc-formula { 
+    background-color: var(--formula-bg); 
+    border: 1px dashed var(--primary); 
+    padding: 15px; 
+    text-align: center; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    color: var(--primary); 
+    font-family: monospace; 
+    font-weight: bold; 
+}
+
+input, select { 
+    width: 100%; 
+    padding: 15px; 
+    margin-bottom: 12px; 
+    border-radius: 8px; 
+    border: 1px solid rgba(255,255,255,0.1); 
+    background-color: var(--input-bg); 
+    color: white; 
+    font-size: 1rem; 
+    outline: none; 
+}
+
+input:focus, select:focus { 
+    border-color: var(--primary); 
+}
+
+/* Fjerner stygge piler på tall-inputs */
+input[type="number"]::-webkit-inner-spin-button, 
+input[type="number"]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+input[type="number"] { -moz-appearance: textfield; }
+
+.action-btn { 
+    width: 100%; 
+    padding: 16px; 
+    border: none; 
+    border-radius: 8px; 
+    background: linear-gradient(90deg, var(--secondary), var(--primary)); 
+    color: white; 
+    font-size: 1.1rem; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
+
+.back-btn { 
+    background: rgba(255,255,255,0.05); 
+    color: var(--text-muted); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    padding: 10px 18px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    margin-bottom: 20px; 
+    margin-right: 10px; 
+}
+
+/* --- Resultater & Graf --- */
+#result-container { 
+    display: none; 
+    margin-top: 25px; 
+}
+
+#result-box { 
+    padding: 20px; 
+    background-color: rgba(0, 210, 255, 0.05); 
+    border-left: 4px solid var(--primary); 
+    border-radius: 4px; 
+    font-size: 1.3rem; 
+    font-weight: bold; 
+}
+
+#explanation-box { 
+    padding: 15px; 
+    background-color: rgba(0,0,0,0.2); 
+    border-radius: 8px; 
+    font-size: 0.95rem; 
+    color: #ccc; 
+    line-height: 1.6; 
+    margin-top: 15px; 
+    font-family: monospace; 
+    white-space: pre-wrap; 
+}
+
+#graph-container { 
+    display: none; 
+    width: 100%; 
+    background: linear-gradient(180deg, rgba(0,0,0,0.96), rgba(15,15,25,0.92)); 
+    border: 1px solid rgba(255,255,255,0.14); 
+    box-shadow: 0 22px 55px rgba(0,0,0,0.28); 
+    border-radius: 14px; 
+    overflow: hidden; 
+    margin-top: 20px; 
+}
+
+canvas { 
+    display: block; 
+    width: 100%; 
+    height: 350px; 
+    image-rendering: optimizeQuality; 
+}
+
+#graphCanvas {
+    cursor: grab;
+    touch-action: none; 
+    background: transparent;
+}
+
+}
+
+#graphCanvas {
+    cursor: grab;
+    touch-action: none; 
+}
+
+#graphCanvas:active {
+    cursor: grabbing;
+}
+
+/* --- Historikk --- */
+.history-item { 
+    padding: 12px 0; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 0.95rem;
+}
+
+.clear-history { 
+    background: none; 
+    border: none; 
+    color: var(--danger); 
+    cursor: pointer; 
+    font-size: 0.8rem; 
+    font-weight: bold; 
+    opacity: 0.7; 
+    transition: 0.3s; 
+    padding: 5px;
+}
+
+.clear-history:hover { 
+    opacity: 1; 
+}
+
+/* Egendefinert rullefelt for historikken */
+#history-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+#history-list::-webkit-scrollbar {
+    width: 6px;
+}
+#history-list::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 10px;
+}
+
+/* --- UI Komponenter --- */
+#toast { 
+    position: fixed; 
+    bottom: -50px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    background: var(--primary); 
+    color: #000; 
+    padding: 10px 25px; 
+    border-radius: 30px; 
+    font-weight: bold; 
+    transition: 0.4s; 
+    z-index: 1000; 
+}
+
+#toast.show { 
+    bottom: 30px; 
+}
+
+.footer { 
+    margin-top: 40px; 
+    color: rgba(255,255,255,0.2); 
+    font-size: 0.8rem; 
+    text-align: center;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* --- DIFFICULTY BUTTONS --- */
+.difficulty-btn {
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: 2px solid;
+    background: rgba(255, 255, 255, 0.05);
+    color: inherit;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+.difficulty-btn.active {
+    opacity: 1;
+    box-shadow: 0 0 15px currentColor;
+}
+
+/* --- LEARNING ANALYTICS STYLES --- */
+#practice-status {
+    padding: 10px;
+    background: rgba(0, 255, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #00ff00;
+}
+
+.learning-card {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
+/* --- ANIMASJONER OG OVERGANGER --- */
+#folder-view, #list-view, #calc-view {
+    animation: fadeIn 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+ 
  
  
